@@ -6,7 +6,7 @@ export async function seedInitialData() {
   // Check admin
   const existingAdmin = db.prepare('SELECT id FROM admin_users WHERE username = ?').get('admin');
   if (!existingAdmin) {
-    const passwordHash = await bcrypt.hash('Poochandi@2026', 10);
+    const passwordHash = await bcrypt.hash('Poochandi#@2001', 10);
     db.prepare('INSERT OR IGNORE INTO admin_users (id, username, password_hash) VALUES (?, ?, ?)').run(
       'admin-1',
       'admin',

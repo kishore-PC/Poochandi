@@ -84,7 +84,7 @@ export default function AdminLoginPage() {
           </div>
 
           <div className="p-3 rounded-xl bg-purple-950/30 border border-purple-900/40 text-[11px] text-purple-300">
-            Default credentials: <span className="font-bold text-teal-300">admin</span> / <span className="font-bold text-teal-300">Poochandi@2026</span>
+            Username: <span className="font-bold text-teal-300">admin</span>
           </div>
 
           <button
