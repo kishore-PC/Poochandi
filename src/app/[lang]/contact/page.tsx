@@ -98,7 +98,7 @@ export default async function ContactPage({ params }: ContactPageProps) {
                 </span>
                 <div className="flex items-center gap-3">
                   <a
-                    href="https://instagram.com/poochandi_ig"
+                    href="https://www.instagram.com/poochandi.in/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-2.5 rounded-xl bg-pink-600/20 text-pink-400 hover:bg-pink-600/40 transition-colors"

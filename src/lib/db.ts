@@ -16,6 +16,14 @@ db.pragma('journal_mode = WAL');
 
 // Initialize schema
 db.exec(`
+  CREATE TABLE IF NOT EXISTS complaint_names (
+    id TEXT PRIMARY KEY,
+    child_name TEXT NOT NULL,
+    child_age INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'ACTIVE',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
   CREATE TABLE IF NOT EXISTS child_requests (
     id TEXT PRIMARY KEY,
     parent_name TEXT NOT NULL,

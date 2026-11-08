@@ -34,7 +34,7 @@ export default function Footer({ lang }: FooterProps) {
             </p>
             <div className="pt-2 flex items-center gap-4">
               <a
-                href="https://instagram.com/poochandi_ig"
+                href="https://www.instagram.com/poochandi.in/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-xl bg-purple-950/80 border border-purple-700/40 flex items-center justify-center text-pink-400 hover:text-white hover:bg-pink-600/30 transition-all"
@@ -73,7 +73,7 @@ export default function Footer({ lang }: FooterProps) {
                 </Link>
               </li>
               <li>
-                <Link href={`/${lang}/send-request`} className="hover:text-teal-300 transition-colors">
+                <Link href={`/${lang}/complaint-name-list`} className="hover:text-teal-300 transition-colors">
                   {dict.nav.sendRequest}
                 </Link>
               </li>

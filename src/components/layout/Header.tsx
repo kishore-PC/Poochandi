@@ -25,7 +25,7 @@ export default function Header({ lang }: HeaderProps) {
 
   const navLinks = [
     { name: dict.nav.home, href: `/${lang}`, icon: Sparkles },
-    { name: dict.nav.sendRequest, href: `/${lang}/send-request`, icon: Send },
+    { name: dict.nav.sendRequest, href: `/${lang}/complaint-name-list`, icon: Send },
     { name: dict.nav.parentingGuides, href: `/${lang}/parenting-guides`, icon: BookOpen },
     { name: dict.nav.about, href: `/${lang}/about-poochandi`, icon: Info },
     { name: dict.nav.contact, href: `/${lang}/contact`, icon: Mail },

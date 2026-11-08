@@ -117,13 +117,13 @@ export default async function AboutPage({ params }: AboutPageProps) {
           </div>
           <div className="flex items-center gap-3">
             <a
-              href="https://instagram.com/poochandi_ig"
+              href="https://www.instagram.com/poochandi.in/"
               target="_blank"
               rel="noopener noreferrer"
               className="px-5 py-2.5 rounded-xl bg-pink-600/80 hover:bg-pink-600 text-white font-bold text-xs flex items-center gap-2 transition-all"
             >
               <InstagramIcon className="w-4 h-4" />
-              <span>@poochandi_ig</span>
+              <span>@poochandi.in</span>
             </a>
             <a
               href="https://youtube.com/@poochandivaraan"

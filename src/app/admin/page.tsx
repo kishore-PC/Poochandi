@@ -12,22 +12,29 @@ import {
   Search,
   LogOut,
   ExternalLink,
-  ShieldCheck,
   Plus,
   Save,
   CheckCircle2,
+  Upload,
+  Image as ImageIcon,
+  Video,
+  Play,
+  Eye,
 } from 'lucide-react';
+import { InstagramIcon } from '@/components/icons/SocialIcons';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'requests' | 'articles' | 'settings'>('requests');
+  const [activeTab, setActiveTab] = useState<'complaint_names' | 'articles' | 'appearance'>('complaint_names');
 
-  // Requests state
-  const [requests, setRequests] = useState<any[]>([]);
+  // Complaint Names state
+  const [complaintNames, setComplaintNames] = useState<any[]>([]);
   const [search, setSearch] = useState('');
-  const [loadingRequests, setLoadingRequests] = useState(true);
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [loadingNames, setLoadingNames] = useState(true);
 
-  // Articles state
+  // Articles CMS state
   const [articles, setArticles] = useState<any[]>([]);
   const [showNewArticleModal, setShowNewArticleModal] = useState(false);
   const [newTitleEn, setNewTitleEn] = useState('');
@@ -38,31 +45,36 @@ export default function AdminDashboardPage() {
   const [newContentEn, setNewContentEn] = useState('');
   const [newContentTa, setNewContentTa] = useState('');
 
-  // Settings state
+  // Appearance & Media Management state
   const [settings, setSettings] = useState<Record<string, string>>({});
+  const [avatarPreview, setAvatarPreview] = useState<string>('');
+  const [logoPreview, setLogoPreview] = useState<string>('');
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
 
   useEffect(() => {
-    fetchRequests();
+    fetchComplaintNames();
     fetchArticles();
     fetchSettings();
-  }, []);
+  }, [sortOrder]);
 
-  const fetchRequests = async () => {
-    setLoadingRequests(true);
+  const fetchComplaintNames = async () => {
+    setLoadingNames(true);
     try {
-      const res = await fetch(`/api/admin/requests${search ? `?search=${encodeURIComponent(search)}` : ''}`);
+      const url = `/api/admin/complaint-names?sort=${sortOrder}${search ? `&search=${encodeURIComponent(search)}` : ''}`;
+      const res = await fetch(url);
       if (res.status === 401) {
         router.push('/admin/login');
         return;
       }
       const data = await res.json();
-      setRequests(data.requests || []);
+      setComplaintNames(data.names || []);
     } catch (e) {
       console.error(e);
     } finally {
-      setLoadingRequests(false);
+      setLoadingNames(false);
     }
   };
 
@@ -80,59 +92,123 @@ export default function AdminDashboardPage() {
     try {
       const res = await fetch('/api/admin/settings');
       const data = await res.json();
-      setSettings(data.settings || {});
+      const s = data.settings || {};
+      setSettings(s);
+      if (s.character_hero_url) setAvatarPreview(s.character_hero_url);
+      if (s.logo_url) setLogoPreview(s.logo_url);
     } catch (e) {
       console.error(e);
     }
   };
 
-  const handleDeleteRequest = async (id: string) => {
-    if (!confirm(`Are you sure you want to permanently delete submission ${id}?`)) return;
-    try {
-      await fetch('/api/admin/requests', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: [id] }),
-      });
-      fetchRequests();
-    } catch (e) {
-      console.error(e);
+  // Complaint name delete handlers
+  const handleDeleteSingle = async (id: string) => {
+    if (!confirm(`Are you sure you want to delete entry ${id}?`)) return;
+    await fetch('/api/admin/complaint-names', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: [id] }),
+    });
+    fetchComplaintNames();
+  };
+
+  const handleDeleteMultiple = async () => {
+    if (selectedIds.length === 0) return;
+    if (!confirm(`Delete ${selectedIds.length} selected entries?`)) return;
+    await fetch('/api/admin/complaint-names', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: selectedIds }),
+    });
+    setSelectedIds([]);
+    fetchComplaintNames();
+  };
+
+  const toggleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(complaintNames.map((n) => n.id));
+    } else {
+      setSelectedIds([]);
     }
   };
 
-  const handleCreateArticle = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const toggleSelectOne = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  // File Upload Handlers (Avatar & Logo)
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingAvatar(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', 'avatar');
+
     try {
-      await fetch('/api/admin/articles', {
+      const res = await fetch('/api/admin/upload', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title_en: newTitleEn,
-          title_ta: newTitleTa,
-          category: newCategory,
-          excerpt_en: newExcerptEn,
-          excerpt_ta: newExcerptTa,
-          content_en: newContentEn,
-          content_ta: newContentTa,
-        }),
+        body: formData,
       });
-      setShowNewArticleModal(false);
-      setNewTitleEn('');
-      setNewTitleTa('');
-      setNewExcerptEn('');
-      setNewExcerptTa('');
-      setNewContentEn('');
-      setNewContentTa('');
-      fetchArticles();
-    } catch (e) {
-      console.error(e);
+      const data = await res.json();
+      if (data.url) {
+        setAvatarPreview(data.url);
+        setSettings((prev) => ({ ...prev, character_hero_url: data.url }));
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setUploadingAvatar(false);
     }
   };
 
-  const handleDeleteArticle = async (id: string) => {
-    if (!confirm('Permanently delete this article?')) return;
-    await fetch(`/api/admin/articles?id=${id}`, { method: 'DELETE' });
-    fetchArticles();
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingLogo(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', 'logo');
+
+    try {
+      const res = await fetch('/api/admin/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.url) {
+        setLogoPreview(data.url);
+        setSettings((prev) => ({ ...prev, logo_url: data.url }));
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  // Instagram oEmbed Preview Fetcher
+  const handleFetchPreview = async (index: 1 | 2 | 3 | 4) => {
+    const url = settings[`reel${index}_url`];
+    if (!url) return;
+
+    try {
+      const res = await fetch(`/api/admin/instagram-preview?url=${encodeURIComponent(url)}`);
+      const data = await res.json();
+      if (data.title) {
+        setSettings((prev) => ({ ...prev, [`reel${index}_title`]: data.title }));
+      }
+      if (data.thumbnail_url) {
+        setSettings((prev) => ({ ...prev, [`reel${index}_thumbnail`]: data.thumbnail_url }));
+      }
+      alert('Instagram Reel preview fetched successfully!');
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleSaveSettings = async (e: React.FormEvent) => {
@@ -179,7 +255,7 @@ export default function AdminDashboardPage() {
           </Link>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-950/60 border border-red-800/50 text-red-300 hover:bg-red-900/60 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-950/60 border border-red-800/50 text-red-300 hover:bg-red-900/60 transition-colors cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span>Sign Out</span>
@@ -192,25 +268,39 @@ export default function AdminDashboardPage() {
         {/* Navigation Sidebar */}
         <aside className="w-full md:w-64 bg-[#0e0620] border-r border-purple-900/40 p-4 space-y-2">
           <button
-            onClick={() => setActiveTab('requests')}
-            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'requests'
+            onClick={() => setActiveTab('complaint_names')}
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'complaint_names'
                 ? 'bg-purple-700/40 text-teal-300 border border-purple-500/50 shadow'
                 : 'text-slate-400 hover:bg-purple-950/40 hover:text-white'
             }`}
           >
             <span className="flex items-center gap-2.5">
               <Users className="w-4 h-4" />
-              <span>Child Requests</span>
+              <span>Complaint Name List</span>
             </span>
             <span className="px-2 py-0.5 rounded-full bg-[#180e38] text-[10px] text-teal-300">
-              {requests.length}
+              {complaintNames.length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('appearance')}
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'appearance'
+                ? 'bg-purple-700/40 text-teal-300 border border-purple-500/50 shadow'
+                : 'text-slate-400 hover:bg-purple-950/40 hover:text-white'
+            }`}
+          >
+            <span className="flex items-center gap-2.5">
+              <ImageIcon className="w-4 h-4" />
+              <span>Appearance & Media</span>
             </span>
           </button>
 
           <button
             onClick={() => setActiveTab('articles')}
-            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all ${
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'articles'
                 ? 'bg-purple-700/40 text-teal-300 border border-purple-500/50 shadow'
                 : 'text-slate-400 hover:bg-purple-950/40 hover:text-white'
@@ -225,43 +315,38 @@ export default function AdminDashboardPage() {
             </span>
           </button>
 
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'settings'
-                ? 'bg-purple-700/40 text-teal-300 border border-purple-500/50 shadow'
-                : 'text-slate-400 hover:bg-purple-950/40 hover:text-white'
-            }`}
-          >
-            <span className="flex items-center gap-2.5">
-              <Settings className="w-4 h-4" />
-              <span>Media & Settings</span>
-            </span>
-          </button>
-
           <div className="pt-8 px-2 text-[11px] text-slate-500 space-y-1">
-            <p>🔒 Zero Public APIs</p>
-            <p>🛡️ Private DB Protection</p>
-            <p>⚡ SQLite WAL Mode Active</p>
+            <p>🔒 Zero Public Database APIs</p>
+            <p>🛡️ Private Admin Verification</p>
+            <p>⚡ Official Instagram: @poochandi.in</p>
           </div>
         </aside>
 
         {/* Dynamic Content Pane */}
         <main className="flex-1 p-6 md:p-8 overflow-y-auto">
           
-          {/* TAB 1: CHILD REQUESTS */}
-          {activeTab === 'requests' && (
+          {/* TAB 1: COMPLAINT NAME LIST MANAGEMENT */}
+          {activeTab === 'complaint_names' && (
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <h2 className="text-2xl font-black text-white">Child Name Requests</h2>
+                  <h2 className="text-2xl font-black text-white">Complaint Name List Management</h2>
                   <p className="text-xs text-slate-400">
-                    Parent submissions for video shoutouts and character mentions.
+                    Live database records of child names and ages submitted by parents.
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
+                  {selectedIds.length > 0 && (
+                    <button
+                      onClick={handleDeleteMultiple}
+                      className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span>Delete ({selectedIds.length})</span>
+                    </button>
+                  )}
                   <a
-                    href="/api/admin/requests?export=csv"
+                    href="/api/admin/complaint-names?export=csv"
                     className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold text-xs shadow-md transition-all"
                   >
                     <Download className="w-4 h-4" />
@@ -270,21 +355,35 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              {/* Search bar */}
-              <div className="flex gap-2 max-w-md">
-                <input
-                  type="text"
-                  placeholder="Search by child, parent name, or Request ID..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-[#140b2e] border border-purple-800/60 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-400"
-                />
-                <button
-                  onClick={fetchRequests}
-                  className="px-4 py-2 rounded-xl bg-purple-900/60 border border-purple-700/50 text-xs font-bold text-purple-200"
-                >
-                  Filter
-                </button>
+              {/* Search and Sort Filter Bar */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex gap-2 flex-1 max-w-md">
+                  <input
+                    type="text"
+                    placeholder="Search by child name or ID..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#140b2e] border border-purple-800/60 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-400"
+                  />
+                  <button
+                    onClick={fetchComplaintNames}
+                    className="px-4 py-2 rounded-xl bg-purple-900/60 border border-purple-700/50 text-xs font-bold text-purple-200 cursor-pointer"
+                  >
+                    Filter
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-400">Sort:</span>
+                  <select
+                    value={sortOrder}
+                    onChange={(e) => setSortOrder(e.target.value as any)}
+                    className="px-3 py-2 rounded-xl bg-[#140b2e] border border-purple-800/60 text-xs text-white"
+                  >
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                  </select>
+                </div>
               </div>
 
               {/* Table */}
@@ -292,46 +391,48 @@ export default function AdminDashboardPage() {
                 <table className="w-full text-left text-xs">
                   <thead className="bg-[#180e38] text-slate-400 uppercase text-[10px] tracking-wider">
                     <tr>
-                      <th className="px-4 py-3">ID</th>
+                      <th className="px-4 py-3 w-8">
+                        <input
+                          type="checkbox"
+                          checked={complaintNames.length > 0 && selectedIds.length === complaintNames.length}
+                          onChange={toggleSelectAll}
+                        />
+                      </th>
+                      <th className="px-4 py-3">Entry ID</th>
                       <th className="px-4 py-3">Child Name</th>
-                      <th className="px-4 py-3">Age / Grade</th>
-                      <th className="px-4 py-3">Behavior</th>
-                      <th className="px-4 py-3">Parent Name</th>
-                      <th className="px-4 py-3">City</th>
-                      <th className="px-4 py-3">Submitted</th>
+                      <th className="px-4 py-3">Child Age</th>
+                      <th className="px-4 py-3">Submission Date & Time</th>
                       <th className="px-4 py-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-purple-900/40 text-slate-300">
-                    {requests.length === 0 ? (
+                    {complaintNames.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
-                          {loadingRequests ? 'Loading submissions...' : 'No child requests found.'}
+                        <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
+                          {loadingNames ? 'Loading child names...' : 'No entries found in Complaint Name List.'}
                         </td>
                       </tr>
                     ) : (
-                      requests.map((r) => (
-                        <tr key={r.id} className="hover:bg-purple-950/30 transition-colors">
-                          <td className="px-4 py-3 font-mono font-bold text-teal-400">{r.id}</td>
-                          <td className="px-4 py-3 font-bold text-white">
-                            {r.child_name} {r.nickname && <span className="text-purple-300 font-normal">({r.nickname})</span>}
-                          </td>
-                          <td className="px-4 py-3">{r.age_grade}</td>
+                      complaintNames.map((n) => (
+                        <tr key={n.id} className="hover:bg-purple-950/30 transition-colors">
                           <td className="px-4 py-3">
-                            <span className="px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800/50 font-medium text-[11px]">
-                              {r.behavior}
-                            </span>
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.includes(n.id)}
+                              onChange={() => toggleSelectOne(n.id)}
+                            />
                           </td>
-                          <td className="px-4 py-3">{r.parent_name}</td>
-                          <td className="px-4 py-3 text-slate-400">{r.city || '—'}</td>
+                          <td className="px-4 py-3 font-mono font-bold text-teal-400">{n.id}</td>
+                          <td className="px-4 py-3 font-bold text-white">{n.child_name}</td>
+                          <td className="px-4 py-3">{n.child_age} Years</td>
                           <td className="px-4 py-3 text-slate-400 whitespace-nowrap">
-                            {new Date(r.created_at).toLocaleDateString()}
+                            {new Date(n.created_at).toLocaleString()}
                           </td>
                           <td className="px-4 py-3 text-right">
                             <button
-                              onClick={() => handleDeleteRequest(r.id)}
-                              className="p-1.5 rounded-lg text-red-400 hover:bg-red-950/80 transition-colors"
-                              title="Delete record"
+                              onClick={() => handleDeleteSingle(n.id)}
+                              className="p-1.5 rounded-lg text-red-400 hover:bg-red-950/80 transition-colors cursor-pointer"
+                              title="Delete entry"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -345,7 +446,208 @@ export default function AdminDashboardPage() {
             </div>
           )}
 
-          {/* TAB 2: ARTICLES CMS */}
+          {/* TAB 2: WEBSITE APPEARANCE & MEDIA MANAGEMENT */}
+          {activeTab === 'appearance' && (
+            <div className="space-y-8 max-w-4xl">
+              <div>
+                <h2 className="text-2xl font-black text-white">Website Appearance & Media Management</h2>
+                <p className="text-xs text-slate-400">
+                  Dynamically upload character artwork, logo, and manage your 4 featured Instagram Reels with previews.
+                </p>
+              </div>
+
+              {settingsSaved && (
+                <div className="p-4 rounded-xl bg-emerald-950/70 border border-emerald-500/50 text-emerald-300 text-xs flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Media & settings successfully saved and updated across the live website!</span>
+                </div>
+              )}
+
+              {/* A. OFFICIAL POOCHANDI CHARACTER AVATAR */}
+              <div className="p-6 rounded-3xl bg-[#140b2e] border border-purple-800/40 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <ImageIcon className="w-4 h-4 text-teal-400" />
+                      <span>Official Poochandi Character (Hero Section)</span>
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Upload your PNG, JPG, or WebP character illustration. Updates the homepage hero instantly.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-6 pt-2">
+                  <div className="w-32 h-32 rounded-2xl bg-[#0c051f] border border-purple-700/50 p-2 flex items-center justify-center overflow-hidden shrink-0">
+                    {avatarPreview ? (
+                      <img src={avatarPreview} alt="Hero Character Preview" className="w-full h-full object-contain" />
+                    ) : (
+                      <span className="text-xs text-slate-500">No Image</span>
+                    )}
+                  </div>
+                  <div className="space-y-3">
+                    <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-900/60 hover:bg-purple-800/60 border border-purple-600/40 text-teal-300 text-xs font-bold cursor-pointer transition-all">
+                      <Upload className="w-4 h-4" />
+                      <span>{uploadingAvatar ? 'Uploading...' : 'Upload Official Poochandi Character'}</span>
+                      <input
+                        type="file"
+                        accept="image/png, image/jpeg, image/webp"
+                        className="hidden"
+                        onChange={handleAvatarUpload}
+                      />
+                    </label>
+                    <p className="text-[11px] text-slate-500">
+                      Supports transparent PNG or WebP for best glowing effects.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* B. WEBSITE LOGO */}
+              <div className="p-6 rounded-3xl bg-[#140b2e] border border-purple-800/40 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <ImageIcon className="w-4 h-4 text-teal-400" />
+                      <span>Upload Website Logo</span>
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Upload PNG or SVG logo. Automatically reflects across header and footer.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-6 pt-2">
+                  <div className="w-48 h-20 rounded-2xl bg-[#0c051f] border border-purple-700/50 p-2 flex items-center justify-center overflow-hidden shrink-0">
+                    {logoPreview ? (
+                      <img src={logoPreview} alt="Logo Preview" className="w-full h-full object-contain" />
+                    ) : (
+                      <span className="text-xs text-slate-500">No Logo</span>
+                    )}
+                  </div>
+                  <div className="space-y-3">
+                    <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-900/60 hover:bg-purple-800/60 border border-purple-600/40 text-teal-300 text-xs font-bold cursor-pointer transition-all">
+                      <Upload className="w-4 h-4" />
+                      <span>{uploadingLogo ? 'Uploading...' : 'Upload Website Logo'}</span>
+                      <input
+                        type="file"
+                        accept="image/png, image/svg+xml"
+                        className="hidden"
+                        onChange={handleLogoUpload}
+                      />
+                    </label>
+                    <p className="text-[11px] text-slate-500">
+                      Recommended: Transparent background PNG or SVG (300 x 80px).
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* C. MANAGE FEATURED INSTAGRAM REELS (EXACTLY 4 REELS) */}
+              <form onSubmit={handleSaveSettings} className="space-y-6">
+                <div className="p-6 rounded-3xl bg-[#140b2e] border border-purple-800/40 space-y-6">
+                  <div className="flex items-center justify-between border-b border-purple-900/50 pb-4">
+                    <div>
+                      <h3 className="text-base font-bold text-white flex items-center gap-2">
+                        <Video className="w-4 h-4 text-orange-400" />
+                        <span>Manage Featured Instagram Reels (4 Videos)</span>
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Profile: <strong>@poochandi.in</strong>. Paste Reel URLs and click &apos;Preview&apos; to fetch metadata.
+                      </p>
+                    </div>
+                  </div>
+
+                  {([1, 2, 3, 4] as const).map((idx) => (
+                    <div key={idx} className="p-5 rounded-2xl bg-[#0d0522] border border-purple-900/40 space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-black text-teal-300 uppercase tracking-wider">
+                          Featured Reel #{idx}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleFetchPreview(idx)}
+                            className="px-3 py-1 rounded-lg bg-purple-900/60 text-purple-200 hover:text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+                          >
+                            <Eye className="w-3 h-3" />
+                            <span>Preview</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSettings((prev) => ({
+                                ...prev,
+                                [`reel${idx}_title`]: '',
+                                [`reel${idx}_url`]: '',
+                                [`reel${idx}_desc`]: '',
+                              }));
+                            }}
+                            className="text-red-400 hover:text-red-300 text-[11px] cursor-pointer"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                        <div>
+                          <label className="block text-slate-300 font-semibold mb-1">Instagram Reel URL</label>
+                          <input
+                            type="text"
+                            placeholder="https://www.instagram.com/reel/..."
+                            value={settings[`reel${idx}_url`] || ''}
+                            onChange={(e) =>
+                              setSettings({ ...settings, [`reel${idx}_url`]: e.target.value })
+                            }
+                            className="w-full px-3 py-2 rounded-xl bg-[#140b2e] border border-purple-800 text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-300 font-semibold mb-1">Reel Title</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. When Kids Refuse to Eat Veggies!"
+                            value={settings[`reel${idx}_title`] || ''}
+                            onChange={(e) =>
+                              setSettings({ ...settings, [`reel${idx}_title`]: e.target.value })
+                            }
+                            className="w-full px-3 py-2 rounded-xl bg-[#140b2e] border border-purple-800 text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="text-xs">
+                        <label className="block text-slate-300 font-semibold mb-1">Short Description</label>
+                        <input
+                          type="text"
+                          placeholder="Short description displayed on the card..."
+                          value={settings[`reel${idx}_desc`] || ''}
+                          onChange={(e) =>
+                            setSettings({ ...settings, [`reel${idx}_desc`]: e.target.value })
+                          }
+                          className="w-full px-3 py-2 rounded-xl bg-[#140b2e] border border-purple-800 text-white"
+                        />
+                      </div>
+                    </div>
+                  ))}
+
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={savingSettings}
+                      className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 text-slate-950 font-black text-xs flex items-center gap-2 cursor-pointer transition-all shadow-md"
+                    >
+                      <Save className="w-4 h-4" />
+                      <span>{savingSettings ? 'Saving...' : 'Save All Video & Media Settings'}</span>
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* TAB 3: ARTICLES CMS */}
           {activeTab === 'articles' && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
@@ -357,7 +659,7 @@ export default function AdminDashboardPage() {
                 </div>
                 <button
                   onClick={() => setShowNewArticleModal(true)}
-                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-slate-950 font-bold text-xs shadow-md transition-all"
+                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-slate-950 font-bold text-xs shadow-md transition-all cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Create New Guide</span>
@@ -387,305 +689,10 @@ export default function AdminDashboardPage() {
                         <ExternalLink className="w-3.5 h-3.5" />
                         Preview
                       </Link>
-                      <button
-                        onClick={() => handleDeleteArticle(art.id)}
-                        className="p-2 rounded-lg text-red-400 hover:bg-red-950/60 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
                     </div>
                   </div>
                 ))}
               </div>
-
-              {/* Modal for adding article */}
-              {showNewArticleModal && (
-                <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-                  <div className="max-w-2xl w-full bg-[#13082b] border border-purple-800 rounded-3xl p-6 sm:p-8 space-y-4 max-h-[90vh] overflow-y-auto">
-                    <h3 className="text-lg font-bold text-white">Create New Bilingual Guide</h3>
-                    <form onSubmit={handleCreateArticle} className="space-y-4 text-xs">
-                      <div>
-                        <label className="block text-slate-300 font-bold mb-1">Title (English)</label>
-                        <input
-                          type="text"
-                          required
-                          value={newTitleEn}
-                          onChange={(e) => setNewTitleEn(e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg bg-[#0c051f] border border-purple-800 text-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-slate-300 font-bold mb-1">Title (தமிழ்)</label>
-                        <input
-                          type="text"
-                          required
-                          value={newTitleTa}
-                          onChange={(e) => setNewTitleTa(e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg bg-[#0c051f] border border-purple-800 text-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-slate-300 font-bold mb-1">Category</label>
-                        <input
-                          type="text"
-                          value={newCategory}
-                          onChange={(e) => setNewCategory(e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg bg-[#0c051f] border border-purple-800 text-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-slate-300 font-bold mb-1">Excerpt (English)</label>
-                        <textarea
-                          rows={2}
-                          value={newExcerptEn}
-                          onChange={(e) => setNewExcerptEn(e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg bg-[#0c051f] border border-purple-800 text-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-slate-300 font-bold mb-1">Excerpt (தமிழ்)</label>
-                        <textarea
-                          rows={2}
-                          value={newExcerptTa}
-                          onChange={(e) => setNewExcerptTa(e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg bg-[#0c051f] border border-purple-800 text-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-slate-300 font-bold mb-1">Content (English)</label>
-                        <textarea
-                          rows={4}
-                          value={newContentEn}
-                          onChange={(e) => setNewContentEn(e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg bg-[#0c051f] border border-purple-800 text-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-slate-300 font-bold mb-1">Content (தமிழ்)</label>
-                        <textarea
-                          rows={4}
-                          value={newContentTa}
-                          onChange={(e) => setNewContentTa(e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg bg-[#0c051f] border border-purple-800 text-white"
-                        />
-                      </div>
-                      <div className="flex justify-end gap-3 pt-2">
-                        <button
-                          type="button"
-                          onClick={() => setShowNewArticleModal(false)}
-                          className="px-4 py-2 rounded-lg bg-purple-950 text-slate-300"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          className="px-4 py-2 rounded-lg bg-teal-500 text-slate-950 font-bold"
-                        >
-                          Save & Publish
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* TAB 3: MEDIA & SETTINGS */}
-          {activeTab === 'settings' && (
-            <div className="space-y-6 max-w-3xl">
-              <div>
-                <h2 className="text-2xl font-black text-white">Media & Website Settings</h2>
-                <p className="text-xs text-slate-400">
-                  Update the 4 featured Instagram videos, thumbnails, logo paths, WhatsApp number, and AdSense codes.
-                </p>
-              </div>
-
-              {settingsSaved && (
-                <div className="p-4 rounded-xl bg-emerald-950/70 border border-emerald-500/50 text-emerald-300 text-xs flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Settings updated successfully! Changes are live immediately.</span>
-                </div>
-              )}
-
-              <form onSubmit={handleSaveSettings} className="space-y-6 text-xs">
-                
-                {/* 4 Instagram Featured Reels Settings */}
-                <div className="p-5 rounded-2xl bg-[#140b2e] border border-purple-800/40 space-y-4">
-                  <h3 className="text-sm font-bold text-teal-300 uppercase tracking-wider">
-                    4 Featured Instagram Reels
-                  </h3>
-                  
-                  {/* Reel 1 */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-purple-900/40">
-                    <div>
-                      <label className="block text-slate-300 font-semibold mb-1">Reel 1 Title</label>
-                      <input
-                        type="text"
-                        value={settings.reel1_title || ''}
-                        onChange={(e) => setSettings({ ...settings, reel1_title: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-[#0c051f] border border-purple-800 text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-300 font-semibold mb-1">Reel 1 Instagram URL</label>
-                      <input
-                        type="text"
-                        value={settings.reel1_url || ''}
-                        onChange={(e) => setSettings({ ...settings, reel1_url: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-[#0c051f] border border-purple-800 text-white"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Reel 2 */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-purple-900/40">
-                    <div>
-                      <label className="block text-slate-300 font-semibold mb-1">Reel 2 Title</label>
-                      <input
-                        type="text"
-                        value={settings.reel2_title || ''}
-                        onChange={(e) => setSettings({ ...settings, reel2_title: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-[#0c051f] border border-purple-800 text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-300 font-semibold mb-1">Reel 2 Instagram URL</label>
-                      <input
-                        type="text"
-                        value={settings.reel2_url || ''}
-                        onChange={(e) => setSettings({ ...settings, reel2_url: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-[#0c051f] border border-purple-800 text-white"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Reel 3 */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-purple-900/40">
-                    <div>
-                      <label className="block text-slate-300 font-semibold mb-1">Reel 3 Title</label>
-                      <input
-                        type="text"
-                        value={settings.reel3_title || ''}
-                        onChange={(e) => setSettings({ ...settings, reel3_title: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-[#0c051f] border border-purple-800 text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-300 font-semibold mb-1">Reel 3 Instagram URL</label>
-                      <input
-                        type="text"
-                        value={settings.reel3_url || ''}
-                        onChange={(e) => setSettings({ ...settings, reel3_url: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-[#0c051f] border border-purple-800 text-white"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Reel 4 */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-purple-900/40">
-                    <div>
-                      <label className="block text-slate-300 font-semibold mb-1">Reel 4 Title</label>
-                      <input
-                        type="text"
-                        value={settings.reel4_title || ''}
-                        onChange={(e) => setSettings({ ...settings, reel4_title: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-[#0c051f] border border-purple-800 text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-300 font-semibold mb-1">Reel 4 Instagram URL</label>
-                      <input
-                        type="text"
-                        value={settings.reel4_url || ''}
-                        onChange={(e) => setSettings({ ...settings, reel4_url: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-[#0c051f] border border-purple-800 text-white"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Social & Contact Settings */}
-                <div className="p-5 rounded-2xl bg-[#140b2e] border border-purple-800/40 space-y-4">
-                  <h3 className="text-sm font-bold text-teal-300 uppercase tracking-wider">
-                    Contact & Social Handles
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-slate-300 font-semibold mb-1">Instagram URL</label>
-                      <input
-                        type="text"
-                        value={settings.instagram_url || ''}
-                        onChange={(e) => setSettings({ ...settings, instagram_url: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-[#0c051f] border border-purple-800 text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-300 font-semibold mb-1">YouTube URL</label>
-                      <input
-                        type="text"
-                        value={settings.youtube_url || ''}
-                        onChange={(e) => setSettings({ ...settings, youtube_url: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-[#0c051f] border border-purple-800 text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-300 font-semibold mb-1">WhatsApp Number (with country code)</label>
-                      <input
-                        type="text"
-                        value={settings.whatsapp_number || ''}
-                        onChange={(e) => setSettings({ ...settings, whatsapp_number: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-[#0c051f] border border-purple-800 text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-300 font-semibold mb-1">Official Contact Email</label>
-                      <input
-                        type="text"
-                        value={settings.contact_email || ''}
-                        onChange={(e) => setSettings({ ...settings, contact_email: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-[#0c051f] border border-purple-800 text-white"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Monetization & Analytics */}
-                <div className="p-5 rounded-2xl bg-[#140b2e] border border-purple-800/40 space-y-4">
-                  <h3 className="text-sm font-bold text-teal-300 uppercase tracking-wider">
-                    Google AdSense & Analytics
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-slate-300 font-semibold mb-1">AdSense Publisher ID</label>
-                      <input
-                        type="text"
-                        value={settings.adsense_publisher_id || ''}
-                        onChange={(e) => setSettings({ ...settings, adsense_publisher_id: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-[#0c051f] border border-purple-800 text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-300 font-semibold mb-1">Google Analytics ID</label>
-                      <input
-                        type="text"
-                        value={settings.google_analytics_id || ''}
-                        onChange={(e) => setSettings({ ...settings, google_analytics_id: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-[#0c051f] border border-purple-800 text-white"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={savingSettings}
-                  className="px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-950 font-black text-xs flex items-center gap-2 cursor-pointer transition-all shadow-md"
-                >
-                  <Save className="w-4 h-4" />
-                  <span>{savingSettings ? 'Saving...' : 'Save Configuration'}</span>
-                </button>
-              </form>
             </div>
           )}
 

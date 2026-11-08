@@ -84,21 +84,43 @@ export default async function HomePage({ params }: HomePageProps) {
                 {dict.hero.subheadline}
               </p>
 
-              <div className="pt-4 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                <Link
-                  href={`/${lang}/send-request`}
-                  className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-slate-950 font-black text-base shadow-lg shadow-orange-500/30 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
-                >
-                  <Send className="w-5 h-5 text-slate-950" />
-                  {dict.hero.ctaPrimary}
-                </Link>
-                <Link
-                  href={`/${lang}/parenting-guides`}
-                  className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-[#1d103f] hover:bg-[#271654] border border-purple-700/50 text-purple-200 font-bold text-base hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
-                >
-                  <BookOpen className="w-5 h-5 text-teal-400" />
-                  {dict.hero.ctaSecondary}
-                </Link>
+              {/* 3 HERO CTA BUTTONS */}
+              <div className="pt-4 flex flex-col gap-4">
+                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+                  {/* BUTTON 1: Complaint Name List Entry */}
+                  <Link
+                    href={`/${lang}/complaint-name-list`}
+                    className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-slate-950 font-black text-sm shadow-lg shadow-orange-500/30 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+                  >
+                    <Send className="w-4 h-4 text-slate-950" />
+                    <span>{dict.hero.btn1}</span>
+                  </Link>
+
+                  {/* BUTTON 2: Parenting Tips */}
+                  <Link
+                    href={`/${lang}/parenting-guides`}
+                    className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-[#1d103f] hover:bg-[#271654] border border-purple-700/50 text-purple-200 font-bold text-sm hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+                  >
+                    <BookOpen className="w-4 h-4 text-teal-400" />
+                    <span>{dict.hero.btn2}</span>
+                  </Link>
+                </div>
+
+                {/* BUTTON 3: PAID SPECIAL VIDEO SERVICE */}
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-950/90 via-[#231247] to-purple-950/90 border border-teal-500/40 shadow-xl max-w-lg mx-auto lg:mx-0">
+                  <p className="text-xs sm:text-sm font-semibold text-teal-300 mb-2.5 text-center lg:text-left">
+                    ✨ {dict.hero.btn3Prompt}
+                  </p>
+                  <a
+                    href="https://ig.me/m/poochandi.in"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-pink-500 via-purple-600 to-teal-500 hover:opacity-95 text-white font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-pink-500/25 transition-all hover:scale-[1.01]"
+                  >
+                    <InstagramIcon className="w-4 h-4" />
+                    <span>{dict.hero.btn3Text}</span>
+                  </a>
+                </div>
               </div>
 
               {/* Trust Badge */}
@@ -211,7 +233,7 @@ export default async function HomePage({ params }: HomePageProps) {
               {dict.moments.followCtaText}
             </p>
             <a
-              href={settings.instagram_url || 'https://instagram.com/poochandi_ig'}
+              href="https://www.instagram.com/poochandi.in/"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2.5 px-6 py-3 rounded-xl bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 hover:opacity-95 text-white font-bold text-sm shadow-lg shadow-pink-600/20 hover:scale-[1.02] transition-all"
