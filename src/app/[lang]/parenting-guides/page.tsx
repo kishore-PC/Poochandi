@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Language } from '@/lib/i18n';
@@ -12,8 +12,8 @@ export async function generateMetadata({ params }: ParentingGuidesPageProps): Pr
   const { lang: rawLang } = await params;
   const lang: Language = rawLang === 'ta' ? 'ta' : 'en';
   return {
-    title: lang === 'ta' ? 'பெற்றோர் வழிகாட்டிகள் & குழந்தைகள் வளர்ப்பு குறிப்புகள்' : 'Parenting Guides & Child Development Tips',
-    description: lang === 'ta' ? 'தென்னிந்திய குடும்பங்களுக்கான நவீன பெற்றோர் வழிகாட்டிகள், உணவு, தூக்கம் மற்றும் செல்போன் பழக்கவழக்க ஆலோசனைகள்.' : 'Evidence-informed parenting guides, toddler sleep hacks, screen-time reduction tips, and South Indian family advice.',
+    title: lang === 'ta' ? 'à®ªà¯†à®±à¯à®±à¯‹à®°à¯ à®µà®´à®¿à®•à®¾à®Ÿà¯à®Ÿà®¿à®•à®³à¯ & à®•à¯à®´à®¨à¯à®¤à¯ˆà®•à®³à¯ à®µà®³à®°à¯à®ªà¯à®ªà¯ à®•à¯à®±à®¿à®ªà¯à®ªà¯à®•à®³à¯' : 'Parenting Guides & Child Development Tips',
+    description: lang === 'ta' ? 'à®¤à¯†à®©à¯à®©à®¿à®¨à¯à®¤à®¿à®¯ à®•à¯à®Ÿà¯à®®à¯à®ªà®™à¯à®•à®³à¯à®•à¯à®•à®¾à®© à®¨à®µà¯€à®© à®ªà¯†à®±à¯à®±à¯‹à®°à¯ à®µà®´à®¿à®•à®¾à®Ÿà¯à®Ÿà®¿à®•à®³à¯, à®‰à®£à®µà¯, à®¤à¯‚à®•à¯à®•à®®à¯ à®®à®±à¯à®±à¯à®®à¯ à®šà¯†à®²à¯à®ªà¯‹à®©à¯ à®ªà®´à®•à¯à®•à®µà®´à®•à¯à®• à®†à®²à¯‹à®šà®©à¯ˆà®•à®³à¯.' : 'Evidence-informed parenting guides, toddler sleep hacks, screen-time reduction tips, and South Indian family advice.',
   };
 }
 
@@ -35,9 +35,9 @@ export default async function ParentingGuidesPage({ params, searchParams }: Pare
     <div className="py-12 md:py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-12 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/80 border border-purple-700/40 text-teal-300 text-xs font-bold"><BookOpen className="w-3.5 h-3.5" /><span>Buzz Creations Parenting Knowledge Hub</span></div>
-          <h1 className="text-3xl sm:text-5xl font-black text-white">{lang === 'ta' ? 'நவீன பெற்றோர் வழிகாட்டிகள்' : 'Poochandi Parenting Guides'}</h1>
-          <p className="text-slate-300 text-base leading-relaxed">{lang === 'ta' ? 'அன்பான வழிகாட்டல், நடைமுறை அனுபவங்கள் மற்றும் தமிழ் கலாச்சார பின்னணியில் உருவான பயனுள்ள குழந்தை வளர்ப்பு ஆலோசனைகள்.' : 'Practical, evidence-informed parenting wisdom designed for South Indian and modern global families.'}</p>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/80 border border-purple-700/40 text-teal-300 text-xs font-bold"><BookOpen className="w-3.5 h-3.5" /><span>Poochandi Varaan Parenting Knowledge Hub</span></div>
+          <h1 className="text-3xl sm:text-5xl font-black text-white">{lang === 'ta' ? 'à®¨à®µà¯€à®© à®ªà¯†à®±à¯à®±à¯‹à®°à¯ à®µà®´à®¿à®•à®¾à®Ÿà¯à®Ÿà®¿à®•à®³à¯' : 'Poochandi Parenting Guides'}</h1>
+          <p className="text-slate-300 text-base leading-relaxed">{lang === 'ta' ? 'à®…à®©à¯à®ªà®¾à®© à®µà®´à®¿à®•à®¾à®Ÿà¯à®Ÿà®²à¯, à®¨à®Ÿà¯ˆà®®à¯à®±à¯ˆ à®…à®©à¯à®ªà®µà®™à¯à®•à®³à¯ à®®à®±à¯à®±à¯à®®à¯ à®¤à®®à®¿à®´à¯ à®•à®²à®¾à®šà¯à®šà®¾à®° à®ªà®¿à®©à¯à®©à®£à®¿à®¯à®¿à®²à¯ à®‰à®°à¯à®µà®¾à®© à®ªà®¯à®©à¯à®³à¯à®³ à®•à¯à®´à®¨à¯à®¤à¯ˆ à®µà®³à®°à¯à®ªà¯à®ªà¯ à®†à®²à¯‹à®šà®©à¯ˆà®•à®³à¯.' : 'Practical, evidence-informed parenting wisdom designed for South Indian and modern global families.'}</p>
         </div>
         <div className="flex flex-wrap items-center justify-between gap-4 mb-10 pb-6 border-b border-purple-900/40">
           <div className="flex flex-wrap items-center gap-2">
@@ -59,7 +59,7 @@ export default async function ParentingGuidesPage({ params, searchParams }: Pare
                     <h2 className="text-xl font-bold text-white group-hover:text-teal-300 transition-colors line-clamp-2 leading-snug"><Link href={`/${lang}/parenting-guides/${art.slug}`}>{title}</Link></h2>
                     <p className="text-sm text-slate-300 line-clamp-3 leading-relaxed">{excerpt}</p>
                   </div>
-                  <div className="px-6 py-4 border-t border-purple-900/40 bg-purple-950/20 flex items-center justify-between text-xs font-bold text-teal-400"><span>{lang === 'ta' ? 'முழு கட்டுரை' : 'Read Full Guide'}</span><ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></div>
+                  <div className="px-6 py-4 border-t border-purple-900/40 bg-purple-950/20 flex items-center justify-between text-xs font-bold text-teal-400"><span>{lang === 'ta' ? 'à®®à¯à®´à¯ à®•à®Ÿà¯à®Ÿà¯à®°à¯ˆ' : 'Read Full Guide'}</span><ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></div>
                 </article>
               );
             })}
@@ -70,3 +70,4 @@ export default async function ParentingGuidesPage({ params, searchParams }: Pare
     </div>
   );
 }
+

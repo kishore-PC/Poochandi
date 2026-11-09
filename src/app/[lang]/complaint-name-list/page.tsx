@@ -3,7 +3,8 @@ import type { Metadata } from 'next';
 import { Language } from '@/lib/i18n';
 import ComplaintNameForm from '@/components/forms/ComplaintNameForm';
 import AdSenseSlot from '@/components/ads/AdSenseSlot';
-import { Sparkles, ArrowDown } from 'lucide-react';
+import { ArrowDown } from 'lucide-react';
+import { queryAll } from '@/lib/db';
 
 interface ComplaintNameListPageProps {
   params: Promise<{ lang: string }>;
@@ -24,6 +25,13 @@ export async function generateMetadata({ params }: ComplaintNameListPageProps): 
 export default async function ComplaintNameListPage({ params }: ComplaintNameListPageProps) {
   const { lang: rawLang } = await params;
   const lang: Language = rawLang === 'ta' ? 'ta' : 'en';
+  let logoUrl = '/images/poochandi-logo.svg';
+  try {
+    const rows = await queryAll<{ key: string; value: string }>(`SELECT key, value FROM site_settings WHERE key = 'logo_url'`);
+    if (rows[0]?.value) logoUrl = rows[0].value;
+  } catch {
+    // keep fallback logo
+  }
 
   return (
     <div className="py-12 md:py-20 relative">
@@ -31,10 +39,9 @@ export default async function ComplaintNameListPage({ params }: ComplaintNameLis
         
         {/* TOP SECTION */}
         <div className="text-center space-y-4 mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-tr from-purple-800 to-teal-500 p-0.5 shadow-xl shadow-purple-900/50 mx-auto">
-            <div className="w-full h-full bg-[#180e38] rounded-full flex items-center justify-center">
-              <span className="text-3xl">❤️</span>
-            </div>
+          <div className="inline-flex items-center justify-center gap-4 mx-auto">
+            <img src={logoUrl} alt="Poochandi official logo" className="w-16 h-16 sm:w-20 sm:h-20 object-contain" />
+            <span className="text-2xl sm:text-3xl font-black tracking-wide text-gradient-magic">Poochandi Varaan</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-black text-white">
             {lang === 'ta' ? 'அன்பான பெற்றோருக்கு வணக்கம்! ❤️' : 'Welcome, Parents! ❤️'}

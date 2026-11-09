@@ -55,7 +55,7 @@ async function seedIfNeeded() {
   const defaultSettings: Record<string, string> = {
     site_name: 'Poochandi.in',
     tagline: 'Modern Parenting with Folklore Magic',
-    parent_brand: 'Buzz Creations',
+    parent_brand: 'Poochandi Varaan',
     instagram_handle: '@poochandi_ig',
     instagram_url: 'https://instagram.com/poochandi_ig',
     youtube_name: 'Poochandi Varaan',

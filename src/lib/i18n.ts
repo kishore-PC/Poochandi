@@ -4,8 +4,8 @@ export type Language = 'en' | 'ta';
 export const dictionaries = {
   en: {
     nav: {
-      brand: 'Poochandi',
-      parentBrand: 'By Buzz Creations',
+      brand: 'POOCHANDI.IN',
+      parentBrand: 'Poochandi Varaan',
       home: 'Home',
       sendRequest: 'Complaint Name List',
       parentingGuides: 'Parenting Guides',
@@ -16,7 +16,7 @@ export const dictionaries = {
     hero: {
       tag: '✨ Modern Parenting Reinvented with Folklore Magic',
       headline: 'Poochandi — Making Modern Parenting Easier & Fun!',
-      subheadline: 'Poochandi is a beloved cultural character reimagined as a gentle digital companion by Buzz Creations. We help South Indian parents encourage positive habits in kids through playful storytelling and traditional folklore.',
+      subheadline: 'Poochandi is a beloved cultural character reimagined as a gentle digital companion by Poochandi Varaan. We help South Indian parents encourage positive habits in kids through playful storytelling and traditional folklore.',
       btn1: 'Complaint Name List Entry',
       btn2: 'Parenting Tips',
       btn3Prompt: 'For special videos exclusive for your children only (Paid)',
@@ -60,7 +60,7 @@ export const dictionaries = {
       cityPlaceholder: 'e.g. Chennai, Madurai, Coimbatore, Bengaluru...',
       instructions: 'Special Instructions for Poochandi (Optional)',
       instructionsPlaceholder: 'Tell us a fun detail, hobby, or specific habit you want Poochandi to gently talk about...',
-      consentText: 'I confirm that I am the parent or legal guardian of the child named above. I consent to Buzz Creations receiving and processing this information solely for preparing a playful video/audio mention. I understand this data will remain strictly private and will never be shared publicly or sold.',
+      consentText: 'I confirm that I am the parent or legal guardian of the child named above. I consent to Poochandi Varaan receiving and processing this information solely for preparing a playful video/audio mention. I understand this data will remain strictly private and will never be shared publicly or sold.',
       submitButton: 'Submit Request to Poochandi ✨',
       submitting: 'Sending to Poochandi...',
       privacyNote: '🔒 Privacy First: Child details are never published online or indexed by search engines. No forced ads or hidden fees.',
@@ -77,11 +77,11 @@ export const dictionaries = {
     },
     about: {
       badge: 'Cultural Heritage Meets Modern Parenting',
-      title: 'About Poochandi & Buzz Creations',
+      title: 'About Poochandi & Poochandi Varaan',
       lead: 'Transforming ancient Tamil bedtime folklore into a gentle, playful, and empowering digital companion for today’s young generation.',
       storyTitle: 'The Story Behind Poochandi',
       storyP1: 'For generations across South India, the word "Poochandi" was whispered in twilight to encourage children to finish dinner or go to sleep. While it was rooted in mystery, it often left children feeling needlessly frightened.',
-      storyP2: 'At Buzz Creations, we asked a transformative question: What if Poochandi wasn’t a scary monster in the shadows, but a warm, mischievous, magical guardian who celebrates children’s milestones, loves vegetables, and encourages peaceful bedtimes?',
+      storyP2: 'At Poochandi Varaan, we asked a transformative question: What if Poochandi wasn’t a scary monster in the shadows, but a warm, mischievous, magical guardian who celebrates children’s milestones, loves vegetables, and encourages peaceful bedtimes?',
       storyP3: 'Today, Poochandi has become a celebrated digital companion followed by tens of thousands of parents. Through colorful storytelling, authentic Tamil voiceovers, and relatable scenarios, we turn everyday parenting struggles into moments of laughter, empathy, and joy.',
       missionTitle: 'Our Mission & Values',
       mission1Title: 'Positive Encouragement Over Fear',
@@ -90,8 +90,8 @@ export const dictionaries = {
       mission2Desc: 'From traditional dishes to regional humor and bilingual expressions, our content resonates with Indian households globally.',
       mission3Title: 'Safe & Respectful of Privacy',
       mission3Desc: 'We safeguard children’s privacy with uncompromising care. No exploitation, no public exposure.',
-      buzzTitle: 'About Buzz Creations',
-      buzzDesc: 'Buzz Creations is an innovative digital content and media studio dedicated to family-friendly regional storytelling, character creation, and inspiring digital communities.',
+      buzzTitle: 'About Poochandi Varaan',
+      buzzDesc: 'Poochandi Varaan creates family-friendly regional storytelling, character content, and inspiring digital moments for parents and children.',
       followUs: 'Connect With Poochandi',
     },
     contact: {
@@ -110,10 +110,10 @@ export const dictionaries = {
       socialsTitle: 'Follow Our Journey',
     },
     footer: {
-      aboutText: 'Poochandi is South India’s favorite gentle parenting companion, created by Buzz Creations to inspire healthy habits, peaceful bedtimes, and joyful family moments through culturally rooted fantasy.',
+      aboutText: 'Poochandi is South India’s favorite gentle parenting companion from Poochandi Varaan, created to inspire healthy habits, peaceful bedtimes, and joyful family moments through culturally rooted fantasy.',
       quickLinks: 'Quick Links',
       legal: 'Legal & Privacy',
-      rights: 'All rights reserved. Buzz Creations.',
+      rights: 'All rights reserved. POOCHANDI VARRAAN.',
       disclaimerShort: 'Content is designed for entertainment and positive encouragement. It is not medical or clinical psychological advice.',
     },
     legal: {
@@ -125,8 +125,8 @@ export const dictionaries = {
   },
   ta: {
     nav: {
-      brand: 'பூச்சாண்டி',
-      parentBrand: 'பஸ் கிரியேஷன்ஸ் வழங்கும்',
+      brand: 'POOCHANDI.IN',
+      parentBrand: 'Poochandi Varaan',
       home: 'முகப்பு',
       sendRequest: 'பெயர் பட்டியல் பதிவு',
       parentingGuides: 'பெற்றோர் வழிகாட்டிகள்',
@@ -137,7 +137,7 @@ export const dictionaries = {
     hero: {
       tag: '✨ பாரம்பரிய கதைகளின் வழியே நவீன குழந்தை வளர்ப்பு',
       headline: 'பூச்சாண்டி — நவீன குழந்தை வளர்ப்பை எளிதாகவும் மகிழ்ச்சியாகவும் மாற்றுகிறது!',
-      subheadline: 'பஸ் கிரியேஷன்ஸ் (Buzz Creations) மூலம் மீண்டும் உருவாக்கப்பட்டுள்ள அன்பான பூச்சாண்டி, குழந்தைகளிடம் நற்பழக்கங்களை வளர்க்க உதவும் ஒரு இனிமையான டிஜிட்டல் தோழன்.',
+      subheadline: 'Poochandi Varaan மூலம் மீண்டும் உருவாக்கப்பட்டுள்ள அன்பான பூச்சாண்டி, குழந்தைகளிடம் நற்பழக்கங்களை வளர்க்க உதவும் ஒரு இனிமையான டிஜிட்டல் தோழன்.',
       btn1: 'குழந்தையின் பெயர் பட்டியல் பதிவு',
       btn2: 'வளர்ப்பு குறிப்புகள்',
       btn3Prompt: 'உங்கள் குழந்தைகளுக்கு மட்டுமேயான பிரத்யேக சிறப்பு வீடியோக்களுக்கு (Paid)',
@@ -181,7 +181,7 @@ export const dictionaries = {
       cityPlaceholder: 'எ.கா: சென்னை, மதுரை, கோவை, திருச்சி...',
       instructions: 'பூச்சாண்டிக்கான கூடுதல் குறிப்புகள் (விருப்பப்பட்டால்)',
       instructionsPlaceholder: 'குழந்தையின் விருப்பம், பழக்கம் பற்றி பூச்சாண்டி பேசுவதற்கு சிறிய குறிப்பு...',
-      consentText: 'நான் இந்த குழந்தையின் பெற்றோர் அல்லது சட்டப்பூர்வ பாதுகாவலர் என்பதை உறுதிப்படுத்துகிறேன். அன்பான வீடியோ வாழ்த்துக்காக மட்டுமே இந்த விவரங்களை பஸ் கிரியேஷன்ஸ் பயன்படுத்த முழு சம்மதம் தருகிறேன். இந்த விவரங்கள் எப்போதும் ரகசியமாக வைக்கப்படும் என்பதை அறிவேன்.',
+      consentText: 'நான் இந்த குழந்தையின் பெற்றோர் அல்லது சட்டப்பூர்வ பாதுகாவலர் என்பதை உறுதிப்படுத்துகிறேன். அன்பான வீடியோ வாழ்த்துக்காக மட்டுமே இந்த விவரங்களை Poochandi Varaan பயன்படுத்த முழு சம்மதம் தருகிறேன். இந்த விவரங்கள் எப்போதும் ரகசியமாக வைக்கப்படும் என்பதை அறிவேன்.',
       submitButton: 'பூச்சாண்டியிடம் கோரிக்கையை சமர்ப்பிக்க ✨',
       submitting: 'அனுப்பப்படுகிறது...',
       privacyNote: '🔒 முழு பாதுகாப்பு: குழந்தையின் விவரங்கள் ஒருபோதும் இணையத்தில் வெளியிடப்படாது. கட்டாய விளம்பரங்களோ கட்டணங்களோ இல்லை.',
@@ -198,11 +198,11 @@ export const dictionaries = {
     },
     about: {
       badge: 'பாரம்பரியமும் நவீன குழந்தை வளர்ப்பும் இணையும் இடம்',
-      title: 'பூச்சாண்டி & பஸ் கிரியேஷன்ஸ் பற்றி',
+      title: 'பூச்சாண்டி & Poochandi Varaan பற்றி',
       lead: 'பழைய தலைமுறையின் பயமுறுத்தும் கதைகளை மாற்றி, இன்றைய குழந்தைகளுக்கு அன்பும் அறிவும் தரும் மாயாஜாலத் தோழனாக பூச்சாண்டியை மாற்றியுள்ளோம்.',
       storyTitle: 'பூச்சாண்டியின் பின்னால் உள்ள கதை',
       storyP1: 'தலைமுறை தலைமுறையாக தமிழ்நாட்டில் "பூச்சாண்டி வருவான்" என்ற சொல் குழந்தைகளைச் சாப்பிட வைக்க அல்லது தூங்க வைக்கப் பயன்படுத்தப்பட்டது. ஆனால் அது பல குழந்தைகளிடம் தேவையில்லாத பயத்தை ஏற்படுத்தியது.',
-      storyP2: 'பஸ் கிரியேஷன்ஸ் இந்த நிலையை மாற்ற விரும்பியது. பூச்சாண்டி ஏன் ஒரு பயங்கரமான பாத்திரமாக இருக்க வேண்டும்? அவர் குழந்தைகளுடன் விளையாடும், நல்ல விஷயங்களைக் கற்றுக்கொடுக்கும் ஒரு அன்பான நண்பராக மாறினால் என்ன என்று யோசித்தோம்.',
+      storyP2: 'Poochandi Varaan இந்த நிலையை மாற்ற விரும்பியது. பூச்சாண்டி ஏன் ஒரு பயங்கரமான பாத்திரமாக இருக்க வேண்டும்? அவர் குழந்தைகளுடன் விளையாடும், நல்ல விஷயங்களைக் கற்றுக்கொடுக்கும் ஒரு அன்பான நண்பராக மாறினால் என்ன என்று யோசித்தோம்.',
       storyP3: 'இன்று லட்சக்கணக்கான பெற்றோர் பூச்சாண்டியை ஒரு டிஜிட்டல் தோழனாக ஏற்றுக்கொண்டுள்ளனர். நகைச்சுவை, தமிழ் மரபு மற்றும் அன்பான கதைகள் மூலம் குழந்தைகளின் அன்றாட பழக்கவழக்கங்களை இனிமையாக்குகிறோம்.',
       missionTitle: 'எங்களின் கொள்கைகள்',
       mission1Title: 'பயத்திற்குப் பதில் நேர்மறை ஊக்கம்',
@@ -211,8 +211,8 @@ export const dictionaries = {
       mission2Desc: 'தமிழர் பாரம்பரிய உணவுகள், கிராமிய கதைகள் மற்றும் பண்பாட்டை எளிமையான வழியில் அடுத்த தலைமுறைக்குக் கொண்டு செல்கிறோம்.',
       mission3Title: 'பாதுகாப்பும் ரகசியமும்',
       mission3Desc: 'குழந்தைகளின் விவரங்களுக்கு முழு பாதுகாப்பு அளிக்கப்படுகிறது. எந்தவொரு விளம்பரத்திற்காகவும் விவரங்கள் பகிரப்படாது.',
-      buzzTitle: 'பஸ் கிரியேஷன்ஸ் பற்றி',
-      buzzDesc: 'பஸ் கிரியேஷன்ஸ் என்பது குடும்பங்களுக்கு ஏற்ற தரமான தமிழ் கதைகள் மற்றும் கதாபாத்திரங்களை உருவாக்கும் நவீன டிஜிட்டல் மீடியா நிறுவனமாகும்.',
+      buzzTitle: 'Poochandi Varaan பற்றி',
+      buzzDesc: 'Poochandi Varaan குடும்பங்களுக்கு ஏற்ற தரமான தமிழ் கதைகள் மற்றும் கதாபாத்திர உள்ளடக்கங்களை உருவாக்குகிறது.',
       followUs: 'பூச்சாண்டியைப் பின்தொடரவும்',
     },
     contact: {
@@ -231,10 +231,10 @@ export const dictionaries = {
       socialsTitle: 'எங்களை பின்தொடருங்கள்',
     },
     footer: {
-      aboutText: 'பூச்சாண்டி என்பது பஸ் கிரியேஷன்ஸ் வழங்கும் நவீன தென்னிந்திய குழந்தை வளர்ப்புத் தோழன். நேர்மறை எண்ணங்கள் மற்றும் பண்பாட்டு கதைகள் மூலம் வளமான எதிர்காலத்தை உருவாக்குகிறது.',
+      aboutText: 'பூச்சாண்டி என்பது Poochandi Varaan வழங்கும் நவீன தென்னிந்திய குழந்தை வளர்ப்புத் தோழன். நேர்மறை எண்ணங்கள் மற்றும் பண்பாட்டு கதைகள் மூலம் வளமான எதிர்காலத்தை உருவாக்குகிறது.',
       quickLinks: 'முக்கிய இணைப்புகள்',
       legal: 'சட்ட விதிகளும் பாதுகாப்பும்',
-      rights: 'அனைத்து உரிமைகளும் பாதுகாக்கப்பட்டவை. பஸ் கிரியேஷன்ஸ்.',
+      rights: 'அனைத்து உரிமைகளும் பாதுகாக்கப்பட்டவை. POOCHANDI VARRAAN.',
       disclaimerShort: 'இத்தளத்தின் உள்ளடக்கம் மகிழ்ச்சி மற்றும் நற்பழக்க ஊக்கத்திற்காக மட்டுமே. இது மருத்துவ அல்லது மருத்துவ மனோதத்துவ ஆலோசனை அல்ல.',
     },
     legal: {

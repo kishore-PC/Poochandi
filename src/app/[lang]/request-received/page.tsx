@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Language, dictionaries } from '@/lib/i18n';
@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: RequestReceivedProps): Promis
   const lang: Language = rawLang === 'ta' ? 'ta' : 'en';
 
   return {
-    title: lang === 'ta' ? 'கோரிக்கை பெறப்பட்டது' : 'Request Received Successfully',
+    title: lang === 'ta' ? 'à®•à¯‹à®°à®¿à®•à¯à®•à¯ˆ à®ªà¯†à®±à®ªà¯à®ªà®Ÿà¯à®Ÿà®¤à¯' : 'Request Received Successfully',
     robots: {
       index: false, // Prevent indexation of confirmation pages for privacy
       follow: false,
@@ -105,7 +105,7 @@ export default async function RequestReceivedPage({ params, searchParams }: Requ
 
           <div className="pt-4 border-t border-purple-950 flex items-center justify-center gap-2 text-xs text-emerald-400">
             <ShieldCheck className="w-4 h-4" />
-            <span>Encrypted & Stored Safely in Buzz Creations Vault</span>
+            <span>Encrypted & Stored Safely in Poochandi Varaan Vault</span>
           </div>
 
         </div>
@@ -114,3 +114,4 @@ export default async function RequestReceivedPage({ params, searchParams }: Requ
     </div>
   );
 }
+

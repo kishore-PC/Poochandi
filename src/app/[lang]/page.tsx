@@ -63,7 +63,7 @@ export default async function HomePage({ params }: HomePageProps) {
             </div>
             <div className="lg:col-span-5 flex justify-center">
               <div className="relative w-72 sm:w-96 lg:w-[420px] aspect-square rounded-3xl p-4 bg-gradient-to-b from-purple-900/30 via-[#190d3d]/60 to-[#0b051b] border border-purple-700/40 shadow-2xl shadow-purple-950/80">
-                <img src={settings.character_hero_url || '/images/poochandi-hero.svg'} alt="Poochandi Official Character by Buzz Creations" className="w-full h-full object-contain filter drop-shadow-[0_10px_25px_rgba(168,85,247,0.4)] animate-bounce-slow" />
+                <img src={settings.character_hero_url || '/images/poochandi-hero.svg'} alt="Poochandi Official Character by Poochandi Varaan" className="w-full h-full object-contain filter drop-shadow-[0_10px_25px_rgba(168,85,247,0.4)] animate-bounce-slow" />
                 <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-[#180e38] border border-purple-500/50 text-[11px] font-bold text-teal-300 shadow-lg flex items-center gap-1.5 whitespace-nowrap"><Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /><span>Official Poochandi Avatar</span></div>
               </div>
             </div>

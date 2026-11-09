@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Poochandi Official | Parenting Tips & Custom Child Requests",
-  description: "Official portal of Poochandi by Buzz Creations. Submit child name requests, watch trending reels, and read modern parenting tips.",
+  description: "Official portal of Poochandi.in and Poochandi Varaan. Submit child name requests, watch trending reels, and read modern parenting tips.",
 };
 
 export default function RootLayout({

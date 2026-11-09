@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -48,7 +48,7 @@ export default function AdminLoginPage() {
           </div>
           <h1 className="text-2xl font-black text-white">Poochandi Admin Vault</h1>
           <p className="text-xs text-purple-300">
-            Protected Console • Buzz Creations Production
+            Protected Console â€¢ Poochandi Varaan Production
           </p>
         </div>
 
@@ -100,3 +100,4 @@ export default function AdminLoginPage() {
     </div>
   );
 }
+

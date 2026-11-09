@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Language, dictionaries } from '@/lib/i18n';
-import { Heart, ShieldCheck, Mail } from 'lucide-react';
+import { Heart, ShieldCheck } from 'lucide-react';
 import { InstagramIcon, YoutubeIcon } from '@/components/icons/SocialIcons';
 
 interface FooterProps {
@@ -23,13 +23,15 @@ export default function Footer({ lang, logoUrl }: FooterProps) {
           {/* Brand Info */}
           <div className="md:col-span-2 space-y-4">
             <Link href={`/${lang}`} className="inline-flex items-center gap-3">
-              {logoUrl ? <img src={logoUrl} alt="Poochandi logo" className="h-10 w-10 rounded-full object-cover border border-purple-700/40" /> : null}
-              <span className="text-2xl font-black tracking-wider text-gradient-magic">
-                POOCHANDI
-              </span>
-              <span className="text-xs px-2 py-0.5 rounded bg-purple-900/60 text-purple-300 font-medium">
-                by Buzz Creations
-              </span>
+              {logoUrl ? <img src={logoUrl} alt="Poochandi logo" className="h-10 w-10 object-contain" /> : null}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                <span className="text-2xl font-black tracking-wider text-gradient-magic">
+                  POOCHANDI.IN
+                </span>
+                <span className="text-xs sm:text-sm font-bold tracking-wide text-teal-300">
+                  POOCHANDI VARRAAN
+                </span>
+              </div>
             </Link>
             <p className="text-sm leading-relaxed text-slate-400 max-w-md">
               {dict.footer.aboutText}
@@ -53,13 +55,6 @@ export default function Footer({ lang, logoUrl }: FooterProps) {
               >
                 <YoutubeIcon className="w-5 h-5" />
               </a>
-              <Link
-                href={`/${lang}/contact`}
-                className="w-10 h-10 rounded-xl bg-purple-950/80 border border-purple-700/40 flex items-center justify-center text-teal-400 hover:text-white hover:bg-teal-600/30 transition-all"
-                aria-label="Contact"
-              >
-                <Mail className="w-5 h-5" />
-              </Link>
             </div>
           </div>
 
@@ -87,11 +82,6 @@ export default function Footer({ lang, logoUrl }: FooterProps) {
               <li>
                 <Link href={`/${lang}/about-poochandi`} className="hover:text-teal-300 transition-colors">
                   {dict.nav.about}
-                </Link>
-              </li>
-              <li>
-                <Link href={`/${lang}/contact`} className="hover:text-teal-300 transition-colors">
-                  {dict.nav.contact}
                 </Link>
               </li>
             </ul>

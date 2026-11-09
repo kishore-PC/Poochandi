@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import type { Metadata } from 'next';
 import { Language, dictionaries } from '@/lib/i18n';
 import { initDb, queryAll } from '@/lib/db';
@@ -12,8 +12,8 @@ export async function generateMetadata({ params }: ContactPageProps): Promise<Me
   const { lang: rawLang } = await params;
   const lang: Language = rawLang === 'ta' ? 'ta' : 'en';
   return {
-    title: lang === 'ta' ? 'தொடர்புக்கு | பூச்சாண்டி' : 'Contact Us | Poochandi Official',
-    description: lang === 'ta' ? 'பூச்சாண்டி மற்றும் பஸ் கிரியேஷன்ஸ் குழுவைத் தொடர்பு கொள்ளவும்.' : 'Get in touch with the Poochandi and Buzz Creations team for feedback, collaborations, or WhatsApp support.',
+    title: lang === 'ta' ? 'à®¤à¯Šà®Ÿà®°à¯à®ªà¯à®•à¯à®•à¯ | à®ªà¯‚à®šà¯à®šà®¾à®£à¯à®Ÿà®¿' : 'Contact Us | Poochandi Official',
+    description: lang === 'ta' ? 'à®ªà¯‚à®šà¯à®šà®¾à®£à¯à®Ÿà®¿ à®®à®±à¯à®±à¯à®®à¯ à®ªà®¸à¯ à®•à®¿à®°à®¿à®¯à¯‡à®·à®©à¯à®¸à¯ à®•à¯à®´à¯à®µà¯ˆà®¤à¯ à®¤à¯Šà®Ÿà®°à¯à®ªà¯ à®•à¯Šà®³à¯à®³à®µà¯à®®à¯.' : 'Get in touch with the Poochandi and Poochandi Varaan team for feedback, collaborations, or WhatsApp support.',
   };
 }
 
@@ -32,7 +32,7 @@ export default async function ContactPage({ params }: ContactPageProps) {
     <div className="py-16 md:py-24">
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
         <div className="text-center space-y-4 mb-14">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/80 border border-purple-700/50 text-teal-300 text-xs font-bold"><Mail className="w-3.5 h-3.5" /><span>Connect with Buzz Creations</span></div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/80 border border-purple-700/50 text-teal-300 text-xs font-bold"><Mail className="w-3.5 h-3.5" /><span>Connect with Poochandi Varaan</span></div>
           <h1 className="text-3xl sm:text-5xl font-black text-white">{dict.contact.title}</h1>
           <p className="text-base text-slate-300 max-w-xl mx-auto">{dict.contact.subtitle}</p>
         </div>
@@ -61,3 +61,4 @@ export default async function ContactPage({ params }: ContactPageProps) {
     </div>
   );
 }
+

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Language, dictionaries } from '@/lib/i18n';
-import { Menu, X, Sparkles, Send, BookOpen, Info, Mail, Globe } from 'lucide-react';
+import { Menu, X, Sparkles, Send, BookOpen, Info, Globe } from 'lucide-react';
 
 interface HeaderProps {
   lang: Language;
@@ -29,7 +29,6 @@ export default function Header({ lang, logoUrl }: HeaderProps) {
     { name: dict.nav.sendRequest, href: `/${lang}/complaint-name-list`, icon: Send },
     { name: dict.nav.parentingGuides, href: `/${lang}/parenting-guides`, icon: BookOpen },
     { name: dict.nav.about, href: `/${lang}/about-poochandi`, icon: Info },
-    { name: dict.nav.contact, href: `/${lang}/contact`, icon: Mail },
   ];
 
   const isActive = (href: string) => {
@@ -44,21 +43,19 @@ export default function Header({ lang, logoUrl }: HeaderProps) {
           
           {/* Brand Logo & Tagline */}
           <Link href={`/${lang}`} className="flex items-center gap-3 group">
-            <div className="relative w-12 h-12 rounded-full bg-gradient-to-tr from-purple-800 to-teal-600 p-0.5 shadow-lg shadow-purple-900/50 group-hover:scale-105 transition-transform duration-300 overflow-hidden">
+            <div className="w-12 h-12 shrink-0 group-hover:scale-105 transition-transform duration-300 flex items-center justify-center">
               {logoUrl ? (
-                <img src={logoUrl} alt="Poochandi logo" className="w-full h-full rounded-full object-cover bg-[#160d31]" />
+                <img src={logoUrl} alt="Poochandi logo" className="w-full h-full object-contain" />
               ) : (
-                <div className="w-full h-full bg-[#160d31] rounded-full flex items-center justify-center overflow-hidden">
-                  <span className="text-2xl animate-pulse">🧙🏽‍♂️</span>
-                </div>
+                <span className="text-2xl animate-pulse">🧙🏽‍♂️</span>
               )}
             </div>
             <div className="flex flex-col">
               <span className="text-xl sm:text-2xl font-black tracking-wider text-gradient-magic">
-                POOCHANDI
+                POOCHANDI.IN
               </span>
               <span className="text-[10px] sm:text-xs font-semibold tracking-widest text-teal-400 uppercase">
-                {dict.nav.parentBrand}
+                Poochandi Varaan
               </span>
             </div>
           </Link>

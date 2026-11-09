@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import type { Metadata } from 'next';
 import { Language, dictionaries } from '@/lib/i18n';
 import { ShieldCheck, Lock } from 'lucide-react';
@@ -12,8 +12,8 @@ export async function generateMetadata({ params }: LegalPageProps): Promise<Meta
   const lang: Language = rawLang === 'ta' ? 'ta' : 'en';
 
   return {
-    title: lang === 'ta' ? 'தனியுரிமைக் கொள்கை' : 'Privacy Policy',
-    description: 'Privacy Policy and Child Data Protection terms for Poochandi.in by Buzz Creations.',
+    title: lang === 'ta' ? 'à®¤à®©à®¿à®¯à¯à®°à®¿à®®à¯ˆà®•à¯ à®•à¯Šà®³à¯à®•à¯ˆ' : 'Privacy Policy',
+    description: 'Privacy Policy and Child Data Protection terms for Poochandi.in by Poochandi Varaan.',
   };
 }
 
@@ -41,7 +41,7 @@ export default async function PrivacyPolicyPage({ params }: LegalPageProps) {
           <section className="space-y-2">
             <h2 className="text-lg font-bold text-teal-300">1. Overview & Commitment</h2>
             <p>
-              At <strong>Poochandi.in</strong> (operated by <strong>Buzz Creations</strong>), we prioritize the privacy and safety of our visitors, particularly children and their families. This Privacy Policy details our practices regarding the collection, storage, and handling of information when you use our website or submit child name requests.
+              At <strong>Poochandi.in</strong> (operated by <strong>Poochandi Varaan</strong>), we prioritize the privacy and safety of our visitors, particularly children and their families. This Privacy Policy details our practices regarding the collection, storage, and handling of information when you use our website or submit child name requests.
             </p>
           </section>
 
@@ -90,7 +90,7 @@ export default async function PrivacyPolicyPage({ params }: LegalPageProps) {
           <section className="space-y-2">
             <h2 className="text-lg font-bold text-teal-300">6. Contact for Privacy Inquiries</h2>
             <p>
-              For any questions regarding this policy or data deletion requests, please contact Buzz Creations at <a href="mailto:privacy@poochandi.in" className="text-teal-400 underline">privacy@poochandi.in</a>.
+              For any questions regarding this policy or data deletion requests, please contact Poochandi Varaan at <a href="mailto:privacy@poochandi.in" className="text-teal-400 underline">privacy@poochandi.in</a>.
             </p>
           </section>
         </div>
@@ -99,3 +99,4 @@ export default async function PrivacyPolicyPage({ params }: LegalPageProps) {
     </div>
   );
 }
+

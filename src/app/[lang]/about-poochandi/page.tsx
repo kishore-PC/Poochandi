@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import type { Metadata } from 'next';
 import { Language, dictionaries } from '@/lib/i18n';
 import { initDb, queryAll } from '@/lib/db';
@@ -11,8 +11,8 @@ export async function generateMetadata({ params }: AboutPageProps): Promise<Meta
   const { lang: rawLang } = await params;
   const lang: Language = rawLang === 'ta' ? 'ta' : 'en';
   return {
-    title: lang === 'ta' ? 'பூச்சாண்டி & பஸ் கிரியேஷன்ஸ் பற்றி' : 'About Poochandi & Buzz Creations',
-    description: lang === 'ta' ? 'தென்னிந்திய பாரம்பரிய கதையிலிருந்து உருவான நவீன அன்பான டிஜிட்டல் தோழன் பூச்சாண்டியின் கதை.' : 'The vision, story, and mission behind Poochandi by Buzz Creations — transforming folklore into gentle parenting encouragement.',
+    title: lang === 'ta' ? 'à®ªà¯‚à®šà¯à®šà®¾à®£à¯à®Ÿà®¿ & à®ªà®¸à¯ à®•à®¿à®°à®¿à®¯à¯‡à®·à®©à¯à®¸à¯ à®ªà®±à¯à®±à®¿' : 'About Poochandi & Poochandi Varaan',
+    description: lang === 'ta' ? 'à®¤à¯†à®©à¯à®©à®¿à®¨à¯à®¤à®¿à®¯ à®ªà®¾à®°à®®à¯à®ªà®°à®¿à®¯ à®•à®¤à¯ˆà®¯à®¿à®²à®¿à®°à¯à®¨à¯à®¤à¯ à®‰à®°à¯à®µà®¾à®© à®¨à®µà¯€à®© à®…à®©à¯à®ªà®¾à®© à®Ÿà®¿à®œà®¿à®Ÿà¯à®Ÿà®²à¯ à®¤à¯‹à®´à®©à¯ à®ªà¯‚à®šà¯à®šà®¾à®£à¯à®Ÿà®¿à®¯à®¿à®©à¯ à®•à®¤à¯ˆ.' : 'The vision, story, and mission behind Poochandi by Poochandi Varaan â€” transforming folklore into gentle parenting encouragement.',
   };
 }
 
@@ -61,3 +61,4 @@ export default async function AboutPage({ params }: AboutPageProps) {
     </div>
   );
 }
+

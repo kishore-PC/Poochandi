@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
@@ -35,18 +35,18 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
   const content = lang === 'ta' ? article.content_ta : article.content_en;
   const excerpt = lang === 'ta' ? article.excerpt_ta : article.excerpt_en;
 
-  const jsonLd = { '@context': 'https://schema.org', '@type': 'Article', headline: title, description: excerpt, image: 'https://poochandi.in/images/poochandi-hero.svg', datePublished: article.created_at, dateModified: article.updated_at, author: { '@type': 'Organization', name: 'Buzz Creations', url: 'https://poochandi.in' }, publisher: { '@type': 'Organization', name: 'Poochandi.in', logo: { '@type': 'ImageObject', url: 'https://poochandi.in/images/poochandi-logo.svg' } } };
+  const jsonLd = { '@context': 'https://schema.org', '@type': 'Article', headline: title, description: excerpt, image: 'https://poochandi.in/images/poochandi-hero.svg', datePublished: article.created_at, dateModified: article.updated_at, author: { '@type': 'Organization', name: 'Poochandi Varaan', url: 'https://poochandi.in' }, publisher: { '@type': 'Organization', name: 'Poochandi.in', logo: { '@type': 'ImageObject', url: 'https://poochandi.in/images/poochandi-logo.svg' } } };
   const paragraphs = String(content || '').split('\n\n');
 
   return (
     <article className="py-12 md:py-20">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        <nav className="mb-6 flex items-center gap-2 text-xs font-semibold text-slate-400"><Link href={`/${lang}`} className="hover:text-teal-300">{lang === 'ta' ? 'முகப்பு' : 'Home'}</Link><span>/</span><Link href={`/${lang}/parenting-guides`} className="hover:text-teal-300">{lang === 'ta' ? 'வழிகாட்டிகள்' : 'Parenting Guides'}</Link><span>/</span><span className="text-teal-400 truncate max-w-xs">{article.category}</span></nav>
+        <nav className="mb-6 flex items-center gap-2 text-xs font-semibold text-slate-400"><Link href={`/${lang}`} className="hover:text-teal-300">{lang === 'ta' ? 'à®®à¯à®•à®ªà¯à®ªà¯' : 'Home'}</Link><span>/</span><Link href={`/${lang}/parenting-guides`} className="hover:text-teal-300">{lang === 'ta' ? 'à®µà®´à®¿à®•à®¾à®Ÿà¯à®Ÿà®¿à®•à®³à¯' : 'Parenting Guides'}</Link><span>/</span><span className="text-teal-400 truncate max-w-xs">{article.category}</span></nav>
         <header className="space-y-4 mb-8">
           <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-purple-950 text-teal-300 border border-purple-800/60">{article.category}</span>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight">{title}</h1>
-          <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 pt-2 border-b border-purple-900/40 pb-6"><span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-purple-400" />Published by Buzz Creations Editorial Team</span><span>•</span><span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-teal-400" />{article.read_time}</span></div>
+          <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 pt-2 border-b border-purple-900/40 pb-6"><span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-purple-400" />Published by Poochandi Varaan Editorial Team</span><span>â€¢</span><span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-teal-400" />{article.read_time}</span></div>
         </header>
         <div className="p-6 rounded-2xl bg-[#140a2c] border-l-4 border-teal-500 mb-8 text-base text-slate-200 leading-relaxed italic">{excerpt}</div>
         <AdSenseSlot slotId="article-top-slot" />
@@ -58,9 +58,10 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
           })}
         </div>
         <AdSenseSlot slotId="article-bottom-slot" />
-        <div className="mt-12 p-6 rounded-2xl bg-[#110726] border border-purple-800/50 space-y-3"><h4 className="text-sm font-bold text-white flex items-center gap-2"><Sparkles className="w-4 h-4 text-teal-400" /><span>About Buzz Creations Parenting Guides</span></h4><p className="text-xs text-slate-400 leading-relaxed">Our parenting articles are curated to offer encouraging, culturally resonant perspectives. They are intended for healthy encouragement and positive reinforcement. They do not replace formal clinical psychological or pediatric advice.</p></div>
-        <div className="mt-8 text-center"><Link href={`/${lang}/parenting-guides`} className="inline-flex items-center gap-2 text-sm font-bold text-teal-400 hover:text-teal-300"><ArrowLeft className="w-4 h-4" /><span>{lang === 'ta' ? 'அனைத்து கட்டுரைகளுக்கும் திரும்பச் செல்' : 'Back to All Parenting Guides'}</span></Link></div>
+        <div className="mt-12 p-6 rounded-2xl bg-[#110726] border border-purple-800/50 space-y-3"><h4 className="text-sm font-bold text-white flex items-center gap-2"><Sparkles className="w-4 h-4 text-teal-400" /><span>About Poochandi Varaan Parenting Guides</span></h4><p className="text-xs text-slate-400 leading-relaxed">Our parenting articles are curated to offer encouraging, culturally resonant perspectives. They are intended for healthy encouragement and positive reinforcement. They do not replace formal clinical psychological or pediatric advice.</p></div>
+        <div className="mt-8 text-center"><Link href={`/${lang}/parenting-guides`} className="inline-flex items-center gap-2 text-sm font-bold text-teal-400 hover:text-teal-300"><ArrowLeft className="w-4 h-4" /><span>{lang === 'ta' ? 'à®…à®©à¯ˆà®¤à¯à®¤à¯ à®•à®Ÿà¯à®Ÿà¯à®°à¯ˆà®•à®³à¯à®•à¯à®•à¯à®®à¯ à®¤à®¿à®°à¯à®®à¯à®ªà®šà¯ à®šà¯†à®²à¯' : 'Back to All Parenting Guides'}</span></Link></div>
       </div>
     </article>
   );
 }
+

@@ -4,7 +4,7 @@ import { initDb, queryAll } from '@/lib/db';
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://poochandi.in';
   const languages = ['en', 'ta'];
-  const staticRoutes = ['', '/send-request', '/parenting-guides', '/about-poochandi', '/contact', '/privacy-policy', '/terms-of-service', '/disclaimer'];
+  const staticRoutes = ['', '/send-request', '/complaint-name-list', '/parenting-guides', '/about-poochandi', '/privacy-policy', '/terms-of-service', '/disclaimer'];
   const routes: MetadataRoute.Sitemap = [];
 
   for (const lang of languages) {

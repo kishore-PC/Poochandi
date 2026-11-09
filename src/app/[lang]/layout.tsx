@@ -19,16 +19,16 @@ export async function generateMetadata({
 
   return {
     title: {
-      template: '%s | Poochandi Official',
+      template: '%s | POOCHANDI.IN',
       default:
         lang === 'ta'
-          ? 'பூச்சாண்டி | நவீன குழந்தை வளர்ப்பு & பிரத்யேக வாழ்த்துகள்'
-          : 'Poochandi Official | Parenting Tips & Custom Child Requests',
+          ? 'POOCHANDI.IN | நவீன குழந்தை வளர்ப்பு & பிரத்யேக வாழ்த்துகள்'
+          : 'POOCHANDI.IN | Parenting Tips & Custom Child Requests',
     },
     description:
       lang === 'ta'
-        ? 'பஸ் கிரியேஷன்ஸின் அதிகாரப்பூர்வ பூச்சாண்டி தளம். குழந்தையின் பெயர் கோரிக்கைகளை அனுப்பவும், பிரபலமான ரீல்ஸ்களைக் காணவும், நவீன பெற்றோர் வழிகாட்டிகளைப் படிக்கவும்.'
-        : 'Official portal of Poochandi by Buzz Creations. Submit child name requests, watch trending reels, and read modern parenting tips.',
+        ? 'POOCHANDI.IN — Poochandi Varaan வழங்கும் அதிகாரப்பூர்வ தளம். குழந்தையின் பெயர் பட்டியலில் பதிவு செய்யவும், பிரபலமான ரீல்ஸ்களைக் காணவும், பெற்றோர் வழிகாட்டிகளைப் படிக்கவும்.'
+        : 'Official portal of POOCHANDI.IN and Poochandi Varaan. Submit child name requests, watch trending reels, and read modern parenting tips.',
     metadataBase: new URL('https://poochandi.in'),
     alternates: {
       canonical: `https://poochandi.in/${lang}`,
@@ -38,11 +38,11 @@ export async function generateMetadata({
       },
     },
     openGraph: {
-      title: 'Poochandi Official — Modern Parenting Reimagined',
+      title: 'POOCHANDI.IN — Modern Parenting Reimagined',
       description:
         'Encouraging positive habits in kids through playful South Indian storytelling, reels, and gentle guidance.',
       url: `https://poochandi.in/${lang}`,
-      siteName: 'Poochandi.in',
+      siteName: 'POOCHANDI.IN',
       locale: lang === 'ta' ? 'ta_IN' : 'en_US',
       type: 'website',
       images: [
@@ -50,7 +50,7 @@ export async function generateMetadata({
           url: '/images/poochandi-hero.svg',
           width: 800,
           height: 800,
-          alt: 'Poochandi Character by Buzz Creations',
+          alt: 'Poochandi Character by Poochandi Varaan',
         },
       ],
     },

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -380,7 +380,7 @@ export default function AdminDashboardPage() {
         <div className="flex items-center gap-3">
           <span className="text-xl font-black text-gradient-magic">POOCHANDI VAULT</span>
           <span className="text-[10px] bg-purple-900/60 border border-purple-600/40 text-teal-300 px-2 py-0.5 rounded font-bold">
-            Buzz Creations Admin
+            POOCHANDI.IN Admin
           </span>
         </div>
         <div className="flex items-center gap-4 text-xs">
@@ -455,9 +455,9 @@ export default function AdminDashboardPage() {
           </button>
 
           <div className="pt-8 px-2 text-[11px] text-slate-500 space-y-1">
-            <p>🔒 Zero Public Database APIs</p>
-            <p>🛡️ Private Admin Verification</p>
-            <p>⚡ Official Instagram: @poochandi.in</p>
+            <p>ðŸ”’ Zero Public Database APIs</p>
+            <p>ðŸ›¡ï¸ Private Admin Verification</p>
+            <p>âš¡ Official Instagram: @poochandi.in</p>
           </div>
         </aside>
 
@@ -803,7 +803,7 @@ export default function AdminDashboardPage() {
                               onChange={(e) => setSettings({ ...settings, [`reel${idx}_thumbnail`]: e.target.value })}
                               className="w-full px-3 py-2 rounded-xl bg-[#140b2e] border border-purple-800 text-white"
                             />
-                            <p className="text-[10px] text-slate-500">If Instagram preview doesn’t fetch, upload the video’s cover image to cloud storage and paste its URL here. Keep Instagram link + title above. Then click <strong>Save All Video & Media Settings</strong>.</p>
+                            <p className="text-[10px] text-slate-500">If Instagram preview doesnâ€™t fetch, upload the videoâ€™s cover image to cloud storage and paste its URL here. Keep Instagram link + title above. Then click <strong>Save All Video & Media Settings</strong>.</p>
                           </div>
                         </div>
                       </div>
@@ -920,7 +920,7 @@ export default function AdminDashboardPage() {
 
                     {selectedRandomNames.length > 0 && (
                       <div className="mt-5 p-4 rounded-2xl bg-[#0d0522] border border-teal-700/30 space-y-3">
-                        <h4 className="text-sm font-black text-teal-300">Your Selected Names — Ready to Copy</h4>
+                        <h4 className="text-sm font-black text-teal-300">Your Selected Names â€” Ready to Copy</h4>
                         <textarea
                           readOnly
                           value={selectedRandomNames.join('\n\n')}
@@ -964,3 +964,4 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import type { Metadata } from 'next';
 import { Language, dictionaries } from '@/lib/i18n';
 import { AlertTriangle } from 'lucide-react';
@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: LegalPageProps): Promise<Meta
   const lang: Language = rawLang === 'ta' ? 'ta' : 'en';
 
   return {
-    title: lang === 'ta' ? 'பொறுப்புத் துறப்பு' : 'Disclaimer & Safe Use Notice',
+    title: lang === 'ta' ? 'à®ªà¯Šà®±à¯à®ªà¯à®ªà¯à®¤à¯ à®¤à¯à®±à®ªà¯à®ªà¯' : 'Disclaimer & Safe Use Notice',
     description: 'Disclaimer and guidance on the entertainment purpose of Poochandi.in.',
   };
 }
@@ -55,7 +55,7 @@ export default async function DisclaimerPage({ params }: LegalPageProps) {
           <section className="space-y-2">
             <h2 className="text-lg font-bold text-teal-300">3. Parental Responsibility</h2>
             <p>
-              Parents and guardians retain full responsibility for screen time monitoring, dietary choices, and the general welfare of their children. Buzz Creations assumes no liability for actions taken based on entertainment content or published parenting articles.
+              Parents and guardians retain full responsibility for screen time monitoring, dietary choices, and the general welfare of their children. Poochandi Varaan assumes no liability for actions taken based on entertainment content or published parenting articles.
             </p>
           </section>
         </div>
@@ -64,3 +64,4 @@ export default async function DisclaimerPage({ params }: LegalPageProps) {
     </div>
   );
 }
+
