@@ -51,6 +51,7 @@ export default function AdminDashboardPage() {
   const [logoPreview, setLogoPreview] = useState<string>('');
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingThumb, setUploadingThumb] = useState<number | null>(null);
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
@@ -209,10 +210,39 @@ export default function AdminDashboardPage() {
       }
       if (data.thumbnail_url) {
         setSettings((prev) => ({ ...prev, [`reel${index}_thumbnail`]: data.thumbnail_url }));
+        setStatusMessage(`Reel #${index} preview/thumbnail fetched!`);
+        setTimeout(() => setStatusMessage(''), 3000);
+      } else {
+        alert('Could not auto-fetch thumbnail from Instagram. You can upload a thumbnail image or paste a thumbnail URL below, then save settings.');
       }
-      alert('Instagram Reel preview fetched successfully!');
     } catch (err) {
       console.error(err);
+      alert('Preview fetch failed. Upload/paste a thumbnail URL and save settings.');
+    }
+  };
+
+  const handleThumbnailUpload = async (index: 1 | 2 | 3 | 4, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingThumb(index);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', `thumbnail${index}`);
+    try {
+      const res = await fetch('/api/admin/upload', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
+      if (data.url) {
+        setSettings((prev) => ({ ...prev, [`reel${index}_thumbnail`]: data.url }));
+        setStatusMessage(`Reel #${index} thumbnail uploaded! Click "Save All Video & Media Settings" to show it on the home page.`);
+        setTimeout(() => setStatusMessage(''), 4000);
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Thumbnail upload failed. Paste a public thumbnail URL instead and save settings.');
+    } finally {
+      setUploadingThumb(null);
+      e.target.value = '';
     }
   };
 
@@ -589,6 +619,7 @@ export default function AdminDashboardPage() {
                                 [`reel${idx}_title`]: '',
                                 [`reel${idx}_url`]: '',
                                 [`reel${idx}_desc`]: '',
+                                [`reel${idx}_thumbnail`]: '',
                               }));
                             }}
                             className="text-red-400 hover:text-red-300 text-[11px] cursor-pointer"
@@ -636,6 +667,34 @@ export default function AdminDashboardPage() {
                           }
                           className="w-full px-3 py-2 rounded-xl bg-[#140b2e] border border-purple-800 text-white"
                         />
+                      </div>
+
+                      <div className="text-xs border-t border-purple-900/30 pt-4">
+                        <label className="block text-slate-300 font-semibold mb-2">Thumbnail / Video Preview Image (shown on home page)</label>
+                        <div className="flex flex-col sm:flex-row gap-4 items-start">
+                          <div className="w-28 h-20 rounded-xl bg-[#140b2e] border border-purple-800/60 overflow-hidden flex items-center justify-center shrink-0">
+                            {settings[`reel${idx}_thumbnail`] ? (
+                              <img src={settings[`reel${idx}_thumbnail`]} alt={`Reel ${idx} thumbnail`} className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-[10px] text-slate-500 px-2 text-center">No preview</span>
+                            )}
+                          </div>
+                          <div className="flex-1 space-y-2 w-full">
+                            <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-900/50 hover:bg-purple-800/50 border border-purple-700/40 text-teal-300 font-bold cursor-pointer">
+                              <Upload className="w-3.5 h-3.5" />
+                              <span>{uploadingThumb === idx ? 'Uploading...' : 'Upload Thumbnail'}</span>
+                              <input type="file" accept="image/*" className="hidden" onChange={(e) => handleThumbnailUpload(idx, e)} />
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Or paste thumbnail/video preview image URL (Cloudinary, Imgur, etc.)"
+                              value={settings[`reel${idx}_thumbnail`] || ''}
+                              onChange={(e) => setSettings({ ...settings, [`reel${idx}_thumbnail`]: e.target.value })}
+                              className="w-full px-3 py-2 rounded-xl bg-[#140b2e] border border-purple-800 text-white"
+                            />
+                            <p className="text-[10px] text-slate-500">If Instagram preview doesn’t fetch, upload the video’s cover image to cloud storage and paste its URL here. Keep Instagram link + title above. Then click <strong>Save All Video & Media Settings</strong>.</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
