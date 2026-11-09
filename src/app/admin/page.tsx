@@ -149,19 +149,19 @@ export default function AdminDashboardPage() {
     formData.append('type', 'avatar');
 
     try {
-      const res = await fetch('/api/admin/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      const res = await fetch('/api/admin/upload', { method: 'POST', body: formData });
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
       if (data.url) {
         setAvatarPreview(data.url);
         setSettings((prev) => ({ ...prev, character_hero_url: data.url }));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      alert(err.message || 'Avatar upload failed. You can paste an image URL below and click "Save All Video & Media Settings".');
     } finally {
       setUploadingAvatar(false);
+      e.target.value = '';
     }
   };
 
@@ -175,19 +175,19 @@ export default function AdminDashboardPage() {
     formData.append('type', 'logo');
 
     try {
-      const res = await fetch('/api/admin/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      const res = await fetch('/api/admin/upload', { method: 'POST', body: formData });
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
       if (data.url) {
         setLogoPreview(data.url);
         setSettings((prev) => ({ ...prev, logo_url: data.url }));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      alert(err.message || 'Logo upload failed. You can paste an image URL below and click "Save All Video & Media Settings".');
     } finally {
       setUploadingLogo(false);
+      e.target.value = '';
     }
   };
 
@@ -479,26 +479,29 @@ export default function AdminDashboardPage() {
 
                 <div className="flex flex-col sm:flex-row items-center gap-6 pt-2">
                   <div className="w-32 h-32 rounded-2xl bg-[#0c051f] border border-purple-700/50 p-2 flex items-center justify-center overflow-hidden shrink-0">
-                    {avatarPreview ? (
-                      <img src={avatarPreview} alt="Hero Character Preview" className="w-full h-full object-contain" />
+                    {(settings.character_hero_url || avatarPreview) ? (
+                      <img src={settings.character_hero_url || avatarPreview} alt="Hero Character Preview" className="w-full h-full object-contain" />
                     ) : (
                       <span className="text-xs text-slate-500">No Image</span>
                     )}
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-3 w-full">
                     <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-900/60 hover:bg-purple-800/60 border border-purple-600/40 text-teal-300 text-xs font-bold cursor-pointer transition-all">
                       <Upload className="w-4 h-4" />
                       <span>{uploadingAvatar ? 'Uploading...' : 'Upload Official Poochandi Character'}</span>
-                      <input
-                        type="file"
-                        accept="image/png, image/jpeg, image/webp"
-                        className="hidden"
-                        onChange={handleAvatarUpload}
-                      />
+                      <input type="file" accept="image/png, image/jpeg, image/webp" className="hidden" onChange={handleAvatarUpload} />
                     </label>
-                    <p className="text-[11px] text-slate-500">
-                      Supports transparent PNG or WebP for best glowing effects.
-                    </p>
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1">Or paste image URL (works on Vercel), then save settings below</label>
+                      <input
+                        type="text"
+                        value={settings.character_hero_url || ''}
+                        onChange={(e) => { const v = e.target.value; setSettings((p) => ({ ...p, character_hero_url: v })); setAvatarPreview(v); }}
+                        placeholder="https://.../poochandi-character.png"
+                        className="w-full px-3 py-2 rounded-xl bg-[#140b2e] border border-purple-800 text-white text-xs"
+                      />
+                    </div>
+                    <p className="text-[11px] text-slate-500">Supports PNG/WebP/JPG. On Vercel, file upload needs Blob storage; URL always works.</p>
                   </div>
                 </div>
               </div>
@@ -519,26 +522,23 @@ export default function AdminDashboardPage() {
 
                 <div className="flex flex-col sm:flex-row items-center gap-6 pt-2">
                   <div className="w-48 h-20 rounded-2xl bg-[#0c051f] border border-purple-700/50 p-2 flex items-center justify-center overflow-hidden shrink-0">
-                    {logoPreview ? (
-                      <img src={logoPreview} alt="Logo Preview" className="w-full h-full object-contain" />
+                    {(settings.logo_url || logoPreview) ? (
+                      <img src={settings.logo_url || logoPreview} alt="Logo Preview" className="w-full h-full object-contain" />
                     ) : (
                       <span className="text-xs text-slate-500">No Logo</span>
                     )}
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-3 w-full">
                     <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-900/60 hover:bg-purple-800/60 border border-purple-600/40 text-teal-300 text-xs font-bold cursor-pointer transition-all">
                       <Upload className="w-4 h-4" />
                       <span>{uploadingLogo ? 'Uploading...' : 'Upload Website Logo'}</span>
-                      <input
-                        type="file"
-                        accept="image/png, image/svg+xml"
-                        className="hidden"
-                        onChange={handleLogoUpload}
-                      />
+                      <input type="file" accept="image/png, image/svg+xml" className="hidden" onChange={handleLogoUpload} />
                     </label>
-                    <p className="text-[11px] text-slate-500">
-                      Recommended: Transparent background PNG or SVG (300 x 80px).
-                    </p>
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1">Or paste logo URL, then save settings below</label>
+                      <input type="text" value={settings.logo_url || ''} onChange={(e) => { const v = e.target.value; setSettings((p) => ({ ...p, logo_url: v })); setLogoPreview(v); }} placeholder="https://.../logo.png" className="w-full px-3 py-2 rounded-xl bg-[#140b2e] border border-purple-800 text-white text-xs" />
+                    </div>
+                    <p className="text-[11px] text-slate-500">Recommended: transparent PNG or SVG.</p>
                   </div>
                 </div>
               </div>
