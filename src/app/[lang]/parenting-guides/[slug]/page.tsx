@@ -1,11 +1,10 @@
 ﻿import React from 'react';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { Language } from '@/lib/i18n';
 import { initDb, queryOne } from '@/lib/db';
 import AdSenseSlot from '@/components/ads/AdSenseSlot';
-import { Clock, Calendar, ArrowLeft, Sparkles } from 'lucide-react';
+import ArticleContentView from '@/components/articles/ArticleContentView';
 
 interface ArticlePageProps { params: Promise<{ lang: string; slug: string }> }
 
@@ -18,8 +17,9 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
   const title = lang === 'ta' ? article.title_ta : article.title_en;
   const excerpt = lang === 'ta' ? article.excerpt_ta : article.excerpt_en;
   return {
-    title: `${title} | Poochandi Parenting Guides`,
+    title: `${title} | Parenting Guides & Child Care Tips`,
     description: excerpt,
+    keywords: article.seo_keywords || undefined,
     alternates: { canonical: `https://poochandi.in/${lang}/parenting-guides/${slug}`, languages: { en: `https://poochandi.in/en/parenting-guides/${slug}`, ta: `https://poochandi.in/ta/parenting-guides/${slug}` } },
     openGraph: { title, description: excerpt, type: 'article', url: `https://poochandi.in/${lang}/parenting-guides/${slug}` },
   };
@@ -31,37 +31,21 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
   await initDb();
   const article = await queryOne<any>('SELECT * FROM articles WHERE slug = ?', [slug]);
   if (!article) notFound();
-  const title = lang === 'ta' ? article.title_ta : article.title_en;
-  const content = lang === 'ta' ? article.content_ta : article.content_en;
-  const excerpt = lang === 'ta' ? article.excerpt_ta : article.excerpt_en;
 
-  const jsonLd = { '@context': 'https://schema.org', '@type': 'Article', headline: title, description: excerpt, image: 'https://poochandi.in/images/poochandi-hero.svg', datePublished: article.created_at, dateModified: article.updated_at, author: { '@type': 'Organization', name: 'Poochandi Varaan', url: 'https://poochandi.in' }, publisher: { '@type': 'Organization', name: 'Poochandi.in', logo: { '@type': 'ImageObject', url: 'https://poochandi.in/images/poochandi-logo.svg' } } };
-  const paragraphs = String(content || '').split('\n\n');
+  const title = lang === 'ta' ? article.title_ta : article.title_en;
+  const excerpt = lang === 'ta' ? article.excerpt_ta : article.excerpt_en;
+  const jsonLd = { '@context': 'https://schema.org', '@type': 'Article', headline: title, description: excerpt, datePublished: article.created_at, dateModified: article.updated_at, author: { '@type': 'Organization', name: 'Poochandi Varaan', url: 'https://poochandi.in' }, publisher: { '@type': 'Organization', name: 'POOCHANDI.IN', logo: { '@type': 'ImageObject', url: 'https://poochandi.in/images/poochandi-logo.svg' } }, keywords: article.seo_keywords || undefined };
 
   return (
-    <article className="py-12 md:py-20">
+    <div className="py-10 md:py-16 min-h-[60vh]" style={{ backgroundColor: '#0D0E12' }}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        <nav className="mb-6 flex items-center gap-2 text-xs font-semibold text-slate-400"><Link href={`/${lang}`} className="hover:text-teal-300">{lang === 'ta' ? 'à®®à¯à®•à®ªà¯à®ªà¯' : 'Home'}</Link><span>/</span><Link href={`/${lang}/parenting-guides`} className="hover:text-teal-300">{lang === 'ta' ? 'à®µà®´à®¿à®•à®¾à®Ÿà¯à®Ÿà®¿à®•à®³à¯' : 'Parenting Guides'}</Link><span>/</span><span className="text-teal-400 truncate max-w-xs">{article.category}</span></nav>
-        <header className="space-y-4 mb-8">
-          <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-purple-950 text-teal-300 border border-purple-800/60">{article.category}</span>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight">{title}</h1>
-          <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 pt-2 border-b border-purple-900/40 pb-6"><span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-purple-400" />Published by Poochandi Varaan Editorial Team</span><span>â€¢</span><span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-teal-400" />{article.read_time}</span></div>
-        </header>
-        <div className="p-6 rounded-2xl bg-[#140a2c] border-l-4 border-teal-500 mb-8 text-base text-slate-200 leading-relaxed italic">{excerpt}</div>
         <AdSenseSlot slotId="article-top-slot" />
-        <div className="space-y-6 text-slate-200 text-base sm:text-lg leading-relaxed">
-          {paragraphs.map((p: string, idx: number) => {
-            if (p.startsWith('## ')) return <h2 key={idx} className="text-2xl sm:text-3xl font-black text-white pt-6 pb-2 text-gradient-magic">{p.replace('## ', '')}</h2>;
-            if (p.startsWith('### ')) return <h3 key={idx} className="text-xl sm:text-2xl font-bold text-teal-300 pt-4 pb-1">{p.replace('### ', '')}</h3>;
-            return <p key={idx} className="text-slate-300">{p}</p>;
-          })}
+        <div className="mt-6">
+          <ArticleContentView article={article} initialLang={lang} />
         </div>
-        <AdSenseSlot slotId="article-bottom-slot" />
-        <div className="mt-12 p-6 rounded-2xl bg-[#110726] border border-purple-800/50 space-y-3"><h4 className="text-sm font-bold text-white flex items-center gap-2"><Sparkles className="w-4 h-4 text-teal-400" /><span>About Poochandi Varaan Parenting Guides</span></h4><p className="text-xs text-slate-400 leading-relaxed">Our parenting articles are curated to offer encouraging, culturally resonant perspectives. They are intended for healthy encouragement and positive reinforcement. They do not replace formal clinical psychological or pediatric advice.</p></div>
-        <div className="mt-8 text-center"><Link href={`/${lang}/parenting-guides`} className="inline-flex items-center gap-2 text-sm font-bold text-teal-400 hover:text-teal-300"><ArrowLeft className="w-4 h-4" /><span>{lang === 'ta' ? 'à®…à®©à¯ˆà®¤à¯à®¤à¯ à®•à®Ÿà¯à®Ÿà¯à®°à¯ˆà®•à®³à¯à®•à¯à®•à¯à®®à¯ à®¤à®¿à®°à¯à®®à¯à®ªà®šà¯ à®šà¯†à®²à¯' : 'Back to All Parenting Guides'}</span></Link></div>
+        <div className="mt-10"><AdSenseSlot slotId="article-bottom-slot" /></div>
       </div>
-    </article>
+    </div>
   );
 }
-

@@ -23,6 +23,7 @@ import {
   Copy,
   RefreshCw,
   X,
+  Pencil,
 } from 'lucide-react';
 import { InstagramIcon } from '@/components/icons/SocialIcons';
 
@@ -47,14 +48,13 @@ export default function AdminDashboardPage() {
 
   // Articles CMS state
   const [articles, setArticles] = useState<any[]>([]);
-  const [showNewArticleModal, setShowNewArticleModal] = useState(false);
-  const [newTitleEn, setNewTitleEn] = useState('');
-  const [newTitleTa, setNewTitleTa] = useState('');
-  const [newCategory, setNewCategory] = useState('Positive Parenting');
-  const [newExcerptEn, setNewExcerptEn] = useState('');
-  const [newExcerptTa, setNewExcerptTa] = useState('');
-  const [newContentEn, setNewContentEn] = useState('');
-  const [newContentTa, setNewContentTa] = useState('');
+  const [showArticleModal, setShowArticleModal] = useState(false);
+  const [editingArticle, setEditingArticle] = useState<any | null>(null);
+  const [articleSaving, setArticleSaving] = useState(false);
+  const [articleForm, setArticleForm] = useState({
+    title_en: '', title_ta: '', slug: '', category: 'Positive Parenting',
+    excerpt_en: '', excerpt_ta: '', content_en: '', content_ta: '', seo_keywords: '', read_time: '5 min read', published: 1,
+  });
 
   // Appearance & Media Management state
   const [settings, setSettings] = useState<Record<string, string>>({});
@@ -368,6 +368,56 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const resetArticleForm = () => {
+    setEditingArticle(null);
+    setArticleForm({ title_en: '', title_ta: '', slug: '', category: 'Positive Parenting', excerpt_en: '', excerpt_ta: '', content_en: '', content_ta: '', seo_keywords: '', read_time: '5 min read', published: 1 });
+  };
+  const openCreateArticle = () => { resetArticleForm(); setShowArticleModal(true); };
+  const openEditArticle = (art: any) => {
+    setEditingArticle(art);
+    setArticleForm({
+      title_en: art.title_en || '', title_ta: art.title_ta || '', slug: art.slug || '', category: art.category || 'Positive Parenting',
+      excerpt_en: art.excerpt_en || '', excerpt_ta: art.excerpt_ta || '', content_en: art.content_en || '', content_ta: art.content_ta || '',
+      seo_keywords: art.seo_keywords || '', read_time: art.read_time || '5 min read', published: art.published ?? 1,
+    });
+    setShowArticleModal(true);
+  };
+  const handleSaveArticle = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setArticleSaving(true);
+    try {
+      const isEdit = !!editingArticle?.id;
+      const res = await fetch('/api/admin/articles', {
+        method: isEdit ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(isEdit ? { id: editingArticle.id, ...articleForm } : articleForm),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to save article');
+      setShowArticleModal(false);
+      resetArticleForm();
+      await fetchArticles();
+      setStatusMessage(isEdit ? 'Article updated successfully!' : 'Article created and published successfully!');
+      setTimeout(() => setStatusMessage(''), 3500);
+    } catch (err: any) {
+      alert(err.message || 'Failed to save article');
+    } finally {
+      setArticleSaving(false);
+    }
+  };
+  const handleDeleteArticle = async (art: any) => {
+    if (!confirm('Are you sure you want to delete this article?')) return;
+    try {
+      const res = await fetch(`/api/admin/articles?id=${encodeURIComponent(art.id)}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete article');
+      await fetchArticles();
+      setStatusMessage('Article deleted successfully.');
+      setTimeout(() => setStatusMessage(''), 3000);
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete article');
+    }
+  };
+
   const handleLogout = async () => {
     await fetch('/api/admin/logout', { method: 'POST' });
     router.push('/admin/login');
@@ -447,7 +497,7 @@ export default function AdminDashboardPage() {
           >
             <span className="flex items-center gap-2.5">
               <FileText className="w-4 h-4" />
-              <span>Parenting Guides CMS</span>
+              <span>Manage Parenting Articles / கட்டுரைகள் மேலாண்மை</span>
             </span>
             <span className="px-2 py-0.5 rounded-full bg-[#180e38] text-[10px] text-teal-300">
               {articles.length}
@@ -828,48 +878,79 @@ export default function AdminDashboardPage() {
           {/* TAB 3: ARTICLES CMS */}
           {activeTab === 'articles' && (
             <div className="space-y-6">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <h2 className="text-2xl font-black text-white">Parenting Guides CMS</h2>
-                  <p className="text-xs text-slate-400">
-                    Manage bilingual articles in English & Tamil with instantaneous publishing.
-                  </p>
+                  <h2 className="text-2xl font-black text-white">Manage Parenting Articles / கட்டுரைகள் மேலாண்மை</h2>
+                  <p className="text-xs text-slate-400">Create, edit, and delete bilingual parenting guides. Changes publish to the live website.</p>
                 </div>
-                <button
-                  onClick={() => setShowNewArticleModal(true)}
-                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-slate-950 font-bold text-xs shadow-md transition-all cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Create New Guide</span>
+                <button onClick={openCreateArticle} className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#FACC15] to-amber-500 text-slate-950 font-bold text-xs shadow-md cursor-pointer">
+                  <Plus className="w-4 h-4" /><span>+ Create New</span>
                 </button>
               </div>
+              {statusMessage && <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-semibold">{statusMessage}</div>}
+              <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-[#181A20]">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#0D0E12] text-slate-400 uppercase text-[10px] tracking-wider">
+                    <tr><th className="px-4 py-3">Title (EN / TA)</th><th className="px-4 py-3">Category</th><th className="px-4 py-3">Slug</th><th className="px-4 py-3 text-right">Actions</th></tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/80 text-slate-300">
+                    {articles.length === 0 ? (
+                      <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-500">No articles found.</td></tr>
+                    ) : articles.map((art) => (
+                      <tr key={art.id} className="hover:bg-[#0D0E12]/60">
+                        <td className="px-4 py-3"><div className="font-bold text-white">{art.title_en}</div><div className="text-purple-300 mt-0.5">{art.title_ta}</div></td>
+                        <td className="px-4 py-3"><span className="px-2 py-0.5 rounded bg-[#0D0E12] border border-slate-700 text-[#FACC15] font-semibold">{art.category}</span></td>
+                        <td className="px-4 py-3 font-mono text-[11px] text-slate-400">/{art.slug}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex justify-end gap-2">
+                            <Link href={`/en/parenting-guides/${art.slug}`} target="_blank" className="px-2.5 py-1.5 rounded-lg border border-slate-700 text-teal-300 hover:bg-slate-800">Preview</Link>
+                            <button type="button" onClick={() => openEditArticle(art)} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white cursor-pointer"><Pencil className="w-3.5 h-3.5" />Edit</button>
+                            <button type="button" onClick={() => handleDeleteArticle(art)} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white cursor-pointer"><Trash2 className="w-3.5 h-3.5" />Delete</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
-              <div className="grid grid-cols-1 gap-4">
-                {articles.map((art) => (
-                  <div
-                    key={art.id}
-                    className="p-5 rounded-2xl bg-[#140b2e] border border-purple-800/40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-purple-600/50 transition-all"
-                  >
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-bold text-teal-400 uppercase tracking-widest">
-                        {art.category}
-                      </span>
-                      <h3 className="text-base font-bold text-white">{art.title_en}</h3>
-                      <p className="text-xs text-purple-300 font-semibold">{art.title_ta}</p>
-                      <p className="text-[11px] text-slate-400">/{art.slug}</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Link
-                        href={`/en/parenting-guides/${art.slug}`}
-                        target="_blank"
-                        className="text-xs font-bold text-teal-400 hover:underline flex items-center gap-1"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        Preview
-                      </Link>
-                    </div>
+          {/* Article Create/Edit Modal */}
+          {showArticleModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm" onClick={() => setShowArticleModal(false)}>
+              <div className="w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-3xl bg-[#181A20] border border-slate-700 shadow-2xl p-5 sm:p-6" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-start justify-between gap-3 mb-5">
+                  <div>
+                    <h3 className="text-xl font-black text-white">{editingArticle ? 'Edit Article' : 'Add New Article'}</h3>
+                    <p className="text-xs text-slate-400 mt-1">Bilingual parenting guide — English & Tamil</p>
                   </div>
-                ))}
+                  <button type="button" onClick={() => setShowArticleModal(false)} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"><X className="w-5 h-5" /></button>
+                </div>
+                <form onSubmit={handleSaveArticle} className="space-y-4 text-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label className="block text-slate-300 font-semibold mb-1">English Title</label><input required value={articleForm.title_en} onChange={(e)=>setArticleForm({...articleForm,title_en:e.target.value})} className="w-full px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
+                    <div><label className="block text-slate-300 font-semibold mb-1">Tamil Title</label><input required value={articleForm.title_ta} onChange={(e)=>setArticleForm({...articleForm,title_ta:e.target.value})} className="w-full px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div><label className="block text-slate-300 font-semibold mb-1">Slug (optional)</label><input value={articleForm.slug} onChange={(e)=>setArticleForm({...articleForm,slug:e.target.value})} placeholder="auto-from English title" className="w-full px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
+                    <div><label className="block text-slate-300 font-semibold mb-1">Category</label><input value={articleForm.category} onChange={(e)=>setArticleForm({...articleForm,category:e.target.value})} className="w-full px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
+                    <div><label className="block text-slate-300 font-semibold mb-1">Read Time</label><input value={articleForm.read_time} onChange={(e)=>setArticleForm({...articleForm,read_time:e.target.value})} className="w-full px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label className="block text-slate-300 font-semibold mb-1">English Overview (1–2 lines)</label><textarea required rows={2} value={articleForm.excerpt_en} onChange={(e)=>setArticleForm({...articleForm,excerpt_en:e.target.value})} className="w-full px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
+                    <div><label className="block text-slate-300 font-semibold mb-1">Tamil Overview (1–2 lines)</label><textarea required rows={2} value={articleForm.excerpt_ta} onChange={(e)=>setArticleForm({...articleForm,excerpt_ta:e.target.value})} className="w-full px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label className="block text-slate-300 font-semibold mb-1">English Main Content (multi-line)</label><textarea required rows={10} value={articleForm.content_en} onChange={(e)=>setArticleForm({...articleForm,content_en:e.target.value})} className="w-full px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white font-mono text-xs" /></div>
+                    <div><label className="block text-slate-300 font-semibold mb-1">Tamil Main Content (multi-line)</label><textarea required rows={10} value={articleForm.content_ta} onChange={(e)=>setArticleForm({...articleForm,content_ta:e.target.value})} className="w-full px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white font-mono text-xs" /></div>
+                  </div>
+                  <div><label className="block text-slate-300 font-semibold mb-1">SEO Target Keywords (comma separated)</label><input value={articleForm.seo_keywords} onChange={(e)=>setArticleForm({...articleForm,seo_keywords:e.target.value})} placeholder="keyword 1, keyword 2" className="w-full px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
+                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                    <button type="submit" disabled={articleSaving} className="flex-1 px-5 py-3 rounded-xl bg-gradient-to-r from-[#FACC15] to-amber-500 text-slate-950 font-black cursor-pointer disabled:opacity-60">{articleSaving ? 'Saving...' : (editingArticle ? 'Save Changes' : 'Publish / Save')}</button>
+                    <button type="button" onClick={() => setShowArticleModal(false)} className="px-5 py-3 rounded-xl border border-slate-600 text-slate-200 font-bold cursor-pointer">Cancel</button>
+                  </div>
+                </form>
               </div>
             </div>
           )}
