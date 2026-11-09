@@ -4,7 +4,11 @@ import type { Metadata } from 'next';
 import { Language } from '@/lib/i18n';
 import { initDb, queryOne } from '@/lib/db';
 import AdSenseSlot from '@/components/ads/AdSenseSlot';
-import ArticleContentView from '@/components/articles/ArticleContentView';
+import dynamic from 'next/dynamic';
+
+const ArticleContentView = dynamic(() => import('@/components/articles/ArticleContentView'), {
+  loading: () => <div className="py-12 text-center text-slate-400">Loading article...</div>,
+});
 
 interface ArticlePageProps { params: Promise<{ lang: string; slug: string }> }
 

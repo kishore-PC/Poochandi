@@ -120,7 +120,7 @@ export default function ComplaintNameForm({ lang }: ComplaintNameFormProps) {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-slate-950 font-black text-base shadow-xl shadow-orange-500/25 transition-all hover:scale-[1.01] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-slate-950 font-black text-base shadow-xl shadow-orange-500/25 transition-all hover:scale-[1.01] active:scale-95 duration-150 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
           >
             <Check className="w-5 h-5 text-slate-950 stroke-[3]" />
             <span>{isSubmitting ? (lang === 'ta' ? 'பதிவாகிறது...' : 'Confirming...') : (lang === 'ta' ? 'உறுதி செய்க (CONFIRM)' : 'CONFIRM')}</span>

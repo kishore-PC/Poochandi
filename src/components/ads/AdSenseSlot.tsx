@@ -9,31 +9,28 @@ interface AdSenseSlotProps {
 export default function AdSenseSlot({
   slotId = '0000000000',
   className = '',
-  format = 'auto'
+  format = 'auto',
 }: AdSenseSlotProps) {
   // In production, when adsense is configured, this serves Google Ads
   const publisherId = process.env.NEXT_PUBLIC_ADSENSE_PUB_ID || 'ca-pub-0000000000000000';
   const isEnabled = process.env.NODE_ENV === 'production' && publisherId !== 'ca-pub-0000000000000000';
 
   return (
-    <div className={`my-8 w-full flex flex-col items-center justify-center ${className}`}>
-      <span className="text-[10px] uppercase tracking-widest text-slate-500 mb-1">
-        ADVERTISEMENT
-      </span>
-      <div className="w-full min-h-[100px] max-w-4xl rounded-2xl border border-purple-900/30 bg-[#0d0722]/50 p-4 flex flex-col items-center justify-center text-center overflow-hidden">
+    <div className={`my-6 sm:my-8 w-full flex flex-col items-center ${className}`} aria-label="Advertisement area">
+      <span className="text-[10px] uppercase tracking-widest text-slate-500 mb-1.5">ADVERTISEMENT</span>
+      <div className="w-full max-w-4xl min-h-[90px] rounded-2xl border border-purple-900/30 bg-[#0d0722]/40 px-4 py-3 flex items-center justify-center overflow-hidden">
         {isEnabled ? (
           <ins
             className="adsbygoogle"
-            style={{ display: 'block', width: '100%' }}
+            style={{ display: 'block', width: '100%', minHeight: 90 }}
             data-ad-client={publisherId}
             data-ad-slot={slotId}
             data-ad-format={format}
             data-full-width-responsive="true"
           />
         ) : (
-          <div className="py-6 px-4 text-xs text-purple-300/70 flex flex-col items-center gap-1">
-            <span className="font-semibold text-purple-200">Google AdSense Placement Area</span>
-            <span>Slot ID: {slotId} • Responsive Unit (Policy compliant spacing)</span>
+          <div className="w-full text-[11px] text-purple-300/60 text-center leading-snug">
+            Ad space (Slot: {slotId}). Spaced to prevent accidental clicks.
           </div>
         )}
       </div>

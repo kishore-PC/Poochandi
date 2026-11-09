@@ -23,7 +23,7 @@ export default function Footer({ lang, logoUrl }: FooterProps) {
           {/* Brand Info */}
           <div className="md:col-span-2 space-y-4">
             <Link href={`/${lang}`} className="inline-flex items-center gap-3">
-              {logoUrl ? <img src={logoUrl} alt="Poochandi logo" className="h-10 w-10 object-contain" /> : null}
+              {logoUrl ? <img src={logoUrl} alt="Poochandi logo" width={40} height={40} loading="lazy" decoding="async" className="h-10 w-10 object-contain" /> : null}
               <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                 <span className="text-2xl font-black tracking-wider text-gradient-magic">
                   POOCHANDI.IN

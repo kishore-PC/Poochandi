@@ -78,14 +78,14 @@ export default function ComplaintNameSuccessPage() {
           <div className="pt-4 flex flex-col gap-3">
             <Link
               href={`/${lang}/complaint-name-list`}
-              className="w-full inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-slate-950 font-black text-base shadow-lg shadow-teal-500/20 transition-all hover:scale-[1.01]"
+              className="w-full inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-slate-950 font-black text-base shadow-lg shadow-teal-500/20 transition-all hover:scale-[1.01] active:scale-95 duration-150"
             >
               <Plus className="w-5 h-5 text-slate-950" />
               <span>{lang === 'ta' ? 'மற்றொரு பெயரைச் சேர்க்க (ADD ANOTHER ENTRY)' : 'ADD ANOTHER ENTRY'}</span>
             </Link>
             <Link
               href={`/${lang}`}
-              className="w-full inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-slate-950 font-black text-base shadow-lg shadow-orange-500/25 transition-all hover:scale-[1.01]"
+              className="w-full inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-slate-950 font-black text-base shadow-lg shadow-orange-500/25 transition-all hover:scale-[1.01] active:scale-95 duration-150"
             >
               <Home className="w-5 h-5 text-slate-950" />
               <span>{lang === 'ta' ? 'முகப்புக்குச் செல்ல (HOME)' : 'HOME'}</span>

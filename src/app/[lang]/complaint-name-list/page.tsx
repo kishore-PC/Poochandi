@@ -40,7 +40,7 @@ export default async function ComplaintNameListPage({ params }: ComplaintNameLis
         {/* TOP SECTION */}
         <div className="text-center space-y-4 mb-8">
           <div className="inline-flex items-center justify-center gap-4 mx-auto">
-            <img src={logoUrl} alt="Poochandi official logo" className="w-16 h-16 sm:w-20 sm:h-20 object-contain" />
+            <img src={logoUrl} alt="Poochandi official logo" width={80} height={80} loading="lazy" decoding="async" className="w-16 h-16 sm:w-20 sm:h-20 object-contain" />
             <span className="text-2xl sm:text-3xl font-black tracking-wide text-gradient-magic">Poochandi Varaan</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-black text-white">

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Language } from '@/lib/i18n';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import CookieConsentBanner from '@/components/layout/CookieConsentBanner';
 import { seedInitialData } from '@/lib/seed';
 import { queryAll } from '@/lib/db';
 
@@ -84,6 +85,7 @@ export default async function LangLayout({
       <Header lang={lang} logoUrl={logoUrl} />
       <main className="flex-1">{children}</main>
       <Footer lang={lang} logoUrl={logoUrl} />
+      <CookieConsentBanner lang={lang} />
     </div>
   );
 }
