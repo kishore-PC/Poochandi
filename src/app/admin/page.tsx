@@ -20,6 +20,9 @@ import {
   Video,
   Play,
   Eye,
+  Copy,
+  RefreshCw,
+  X,
 } from 'lucide-react';
 import { InstagramIcon } from '@/components/icons/SocialIcons';
 
@@ -33,6 +36,14 @@ export default function AdminDashboardPage() {
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [loadingNames, setLoadingNames] = useState(true);
+  // To Copy / Random Select state
+  const [showToCopyModal, setShowToCopyModal] = useState(false);
+  const [toCopyLoading, setToCopyLoading] = useState(false);
+  const [toCopyEntries, setToCopyEntries] = useState<any[]>([]);
+  const [randomCountInput, setRandomCountInput] = useState('');
+  const [selectedRandomNames, setSelectedRandomNames] = useState<string[]>([]);
+  const [copyStatus, setCopyStatus] = useState('');
+  const [copyError, setCopyError] = useState('');
 
   // Articles CMS state
   const [articles, setArticles] = useState<any[]>([]);
@@ -138,6 +149,96 @@ export default function AdminDashboardPage() {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
+  };
+
+  // Complaint Names: To Copy / Random Select
+  const openToCopyModal = async () => {
+    setShowToCopyModal(true);
+    setSelectedRandomNames([]);
+    setCopyStatus('');
+    setCopyError('');
+    setRandomCountInput('');
+    setToCopyLoading(true);
+    try {
+      const res = await fetch('/api/admin/complaint-names?sort=newest');
+      if (res.status === 401) {
+        router.push('/admin/login');
+        return;
+      }
+      const data = await res.json();
+      setToCopyEntries(Array.isArray(data.names) ? data.names : []);
+    } catch (e) {
+      console.error(e);
+      setCopyError('Failed to load entries from the database.');
+      setToCopyEntries([]);
+    } finally {
+      setToCopyLoading(false);
+    }
+  };
+
+  const pickRandomNames = (count: number) => {
+    const pool = [...toCopyEntries];
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    return pool.slice(0, count).map((n) => String(n.child_name ?? ''));
+  };
+
+  const handleCopyRandomly = () => {
+    setCopyError('');
+    setCopyStatus('');
+    const total = toCopyEntries.length;
+    if (total === 0) {
+      setCopyError('No entries available.');
+      return;
+    }
+    const raw = randomCountInput.trim();
+    if (!raw) {
+      setCopyError('Please enter how many names to select.');
+      return;
+    }
+    if (!/^\d+$/.test(raw)) {
+      setCopyError('Requested count must be a positive whole number.');
+      return;
+    }
+    const count = Number(raw);
+    if (count < 1) {
+      setCopyError('Requested count must be a positive whole number.');
+      return;
+    }
+    if (count > total) {
+      setCopyError(`Requested count cannot exceed available entries (${total}).`);
+      return;
+    }
+    setSelectedRandomNames(pickRandomNames(count));
+  };
+
+  const handleCopyAllNames = async () => {
+    if (selectedRandomNames.length === 0) return;
+    const text = selectedRandomNames.join('\n\n');
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyStatus(`Successfully copied ${selectedRandomNames.length} names!`);
+      setCopyError('');
+    } catch (e) {
+      console.error(e);
+      setCopyError('Could not copy to clipboard. Please select the text and copy manually.');
+    }
+  };
+
+  const handleSelectAgain = () => {
+    const total = toCopyEntries.length;
+    const raw = randomCountInput.trim();
+    const count = /^\d+$/.test(raw) ? Number(raw) : 0;
+    if (count >= 1 && count <= total && total > 0) {
+      setSelectedRandomNames(pickRandomNames(count));
+      setCopyStatus('');
+      setCopyError('');
+    } else {
+      setSelectedRandomNames([]);
+      setCopyError('Enter a valid count, then click COPY RANDOMLY or Select Again.');
+    }
   };
 
   // File Upload Handlers (Avatar & Logo)
@@ -383,6 +484,14 @@ export default function AdminDashboardPage() {
                       <span>Delete ({selectedIds.length})</span>
                     </button>
                   )}
+                  <button
+                    type="button"
+                    onClick={openToCopyModal}
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs shadow-md transition-all cursor-pointer"
+                  >
+                    <Copy className="w-4 h-4" />
+                    <span>TO COPY</span>
+                  </button>
                   <a
                     href="/api/admin/complaint-names?export=csv"
                     className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold text-xs shadow-md transition-all"
@@ -436,6 +545,7 @@ export default function AdminDashboardPage() {
                           onChange={toggleSelectAll}
                         />
                       </th>
+                      <th className="px-4 py-3 w-14">S.No</th>
                       <th className="px-4 py-3">Entry ID</th>
                       <th className="px-4 py-3">Child Name</th>
                       <th className="px-4 py-3">Child Age</th>
@@ -446,12 +556,12 @@ export default function AdminDashboardPage() {
                   <tbody className="divide-y divide-purple-900/40 text-slate-300">
                     {complaintNames.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
+                        <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
                           {loadingNames ? 'Loading child names...' : 'No entries found in Complaint Name List.'}
                         </td>
                       </tr>
                     ) : (
-                      complaintNames.map((n) => (
+                      complaintNames.map((n, index) => (
                         <tr key={n.id} className="hover:bg-purple-950/30 transition-colors">
                           <td className="px-4 py-3">
                             <input
@@ -460,6 +570,7 @@ export default function AdminDashboardPage() {
                               onChange={() => toggleSelectOne(n.id)}
                             />
                           </td>
+                          <td className="px-4 py-3 text-slate-400 font-semibold">{index + 1}</td>
                           <td className="px-4 py-3 font-mono font-bold text-teal-400">{n.id}</td>
                           <td className="px-4 py-3 font-bold text-white">{n.child_name}</td>
                           <td className="px-4 py-3">{n.child_age} Years</td>
@@ -759,6 +870,91 @@ export default function AdminDashboardPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* TO COPY / Random Select Modal */}
+          {showToCopyModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setShowToCopyModal(false)}>
+              <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl bg-[#12082b] border border-purple-700/50 shadow-2xl p-5 sm:p-6" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div>
+                    <h3 className="text-xl font-black text-white">Randomly Select Names</h3>
+                    <p className="text-xs text-slate-400 mt-1">Select random child names from the actual Complaint Name List database.</p>
+                  </div>
+                  <button type="button" onClick={() => setShowToCopyModal(false)} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-purple-900/40 cursor-pointer" aria-label="Close">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {toCopyLoading ? (
+                  <p className="text-sm text-slate-400 py-6 text-center">Loading entries...</p>
+                ) : (
+                  <>
+                    <div className="p-4 rounded-2xl bg-[#0d0522] border border-purple-900/40 space-y-3">
+                      <div className="text-sm text-slate-200 flex flex-wrap items-center gap-2">
+                        <span>Randomly Select</span>
+                        <input
+                          type="number"
+                          min={1}
+                          max={Math.max(1, toCopyEntries.length)}
+                          value={randomCountInput}
+                          onChange={(e) => setRandomCountInput(e.target.value)}
+                          placeholder=""
+                          className="w-20 px-2 py-1.5 rounded-lg bg-[#140b2e] border border-purple-700 text-white text-center font-bold"
+                        />
+                        <span>of <strong className="text-teal-300">{toCopyEntries.length}</strong> Entries</span>
+                      </div>
+                      {toCopyEntries.length === 0 && <p className="text-xs text-amber-300">No entries available.</p>}
+                      {copyError && <p className="text-xs text-red-300">{copyError}</p>}
+                      <button
+                        type="button"
+                        onClick={handleCopyRandomly}
+                        disabled={toCopyEntries.length === 0}
+                        className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 text-slate-950 font-black text-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        COPY RANDOMLY
+                      </button>
+                    </div>
+
+                    {selectedRandomNames.length > 0 && (
+                      <div className="mt-5 p-4 rounded-2xl bg-[#0d0522] border border-teal-700/30 space-y-3">
+                        <h4 className="text-sm font-black text-teal-300">Your Selected Names — Ready to Copy</h4>
+                        <textarea
+                          readOnly
+                          value={selectedRandomNames.join('\n\n')}
+                          className="w-full min-h-[180px] px-3 py-3 rounded-xl bg-[#140b2e] border border-purple-800 text-white text-sm leading-relaxed resize-y"
+                          aria-label="Selected names"
+                        />
+                        <p className="text-[11px] text-slate-500">Names only, one per line. No serial numbers, ages, dates, or IDs.</p>
+                        {copyStatus && (
+                          <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-semibold">
+                            {copyStatus}
+                          </div>
+                        )}
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <button
+                            type="button"
+                            onClick={handleCopyAllNames}
+                            className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-950 font-black text-sm cursor-pointer"
+                          >
+                            <Copy className="w-4 h-4" />
+                            COPY ALL NAMES
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleSelectAgain}
+                            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-purple-900/60 hover:bg-purple-800/60 border border-purple-700/50 text-purple-100 font-bold text-sm cursor-pointer"
+                          >
+                            <RefreshCw className="w-4 h-4" />
+                            Select Again
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           )}
