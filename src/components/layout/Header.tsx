@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Language, dictionaries } from '@/lib/i18n';
-import { Menu, X, Sparkles, Send, BookOpen, Info, Globe } from 'lucide-react';
+import { Menu, X, Sparkles, Send, BookOpen, Info, Globe, Shield } from 'lucide-react';
 
 interface HeaderProps {
   lang: Language;
@@ -14,8 +14,15 @@ interface HeaderProps {
 
 export default function Header({ lang, logoUrl }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const pathname = usePathname();
   const dict = dictionaries[lang];
+
+  React.useEffect(() => {
+    try {
+      setIsAdmin(typeof document !== 'undefined' && document.cookie.includes('admin-token='));
+    } catch {}
+  }, [pathname]);
 
   // Helper to switch language while preserving path
   const getLanguageSwitchUrl = (targetLang: Language) => {
@@ -109,18 +116,31 @@ export default function Header({ lang, logoUrl }: HeaderProps) {
               </Link>
             </div>
 
-            {/* Admin shortcut button */}
+            {/* Admin shortcut - desktop */}
             <Link
               href="/admin"
-              className="hidden lg:inline-flex text-xs font-semibold px-2.5 py-1.5 rounded-lg text-purple-300 hover:text-white hover:bg-purple-900/30 transition-colors"
+              className="hidden lg:inline-flex min-h-[44px] items-center text-xs font-semibold px-3 py-2 rounded-lg text-purple-300 hover:text-white hover:bg-purple-900/30 transition-colors"
+              aria-label={lang === 'ta' ? 'நிர்வாகம்' : 'Admin'}
             >
               {dict.nav.admin}
             </Link>
 
+            {/* Admin icon - mobile header (visible on small screens) */}
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="md:hidden inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-xl text-teal-300 bg-purple-900/30 border border-purple-700/40 hover:bg-purple-800/40"
+                aria-label={lang === 'ta' ? 'நிர்வாகம்' : 'Admin Panel'}
+                title={lang === 'ta' ? 'நிர்வாகம்' : 'Admin'}
+              >
+                <Shield className="w-5 h-5" />
+              </Link>
+            )}
+
             {/* Mobile menu toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-xl text-slate-300 hover:text-white hover:bg-purple-900/40 focus:outline-none"
+              className="md:hidden inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-xl text-slate-300 hover:text-white hover:bg-purple-900/40 focus:outline-none"
               aria-label="Toggle Navigation Menu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -151,15 +171,17 @@ export default function Header({ lang, logoUrl }: HeaderProps) {
               </Link>
             );
           })}
-          <div className="pt-2 border-t border-purple-900/50 flex justify-between items-center px-2">
+          <div className="pt-2 border-t border-purple-900/50">
             <Link
               href="/admin"
               onClick={() => setMobileMenuOpen(false)}
-              className="text-xs text-purple-400 hover:text-purple-200 font-semibold py-2"
+              className="flex items-center gap-3 min-h-[44px] px-4 py-3 rounded-xl text-base font-semibold text-purple-200 bg-purple-950/40 border border-purple-700/40 hover:bg-purple-900/40"
+              aria-label={lang === 'ta' ? 'நிர்வாகம்' : 'Admin Panel'}
             >
-              Admin Portal
+              <Shield className="w-5 h-5 text-teal-400" />
+              <span>{lang === 'ta' ? 'நிர்வாகம்' : 'Admin'}</span>
             </Link>
-            <span className="text-xs text-slate-500">Poochandi.in</span>
+            <p className="text-xs text-slate-500 px-2 pt-2">Poochandi.in</p>
           </div>
         </div>
       )}

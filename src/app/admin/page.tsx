@@ -443,16 +443,16 @@ export default function AdminDashboardPage() {
           <Link
             href="/en"
             target="_blank"
-            className="flex items-center gap-1 text-slate-300 hover:text-white"
+            className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3 text-slate-300 hover:text-white"
           >
-            <ExternalLink className="w-3.5 h-3.5" />
+            <ExternalLink className="w-4 h-4" />
             <span>View Public Site</span>
           </Link>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-950/60 border border-red-800/50 text-red-300 hover:bg-red-900/60 transition-colors cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-4 py-2 rounded-lg bg-red-950/60 border border-red-800/50 text-xs font-bold text-red-300 hover:bg-red-900/60 transition-colors cursor-pointer"
           >
-            <LogOut className="w-3.5 h-3.5" />
+            <LogOut className="w-4 h-4" />
             <span>Sign Out</span>
           </button>
         </div>
@@ -460,11 +460,12 @@ export default function AdminDashboardPage() {
 
       {/* Main layout */}
       <div className="flex-1 flex flex-col md:flex-row">
-        {/* Navigation Sidebar */}
-        <aside className="w-full md:w-64 bg-[#0e0620] border-r border-purple-900/40 p-4 space-y-2">
+        {/* Navigation Sidebar / Mobile Tabs */}
+        <aside className="w-full md:w-64 bg-[#0e0620] border-b md:border-b-0 md:border-r border-purple-900/40 p-3 md:p-4">
+          <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible pb-1 md:pb-0 -mx-1 px-1 md:mx-0 md:px-0 snap-x">
           <button
             onClick={() => setActiveTab('complaint_names')}
-            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`shrink-0 md:w-full min-h-[44px] flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer snap-start ${
               activeTab === 'complaint_names'
                 ? 'bg-purple-700/40 text-teal-300 border border-purple-500/50 shadow'
                 : 'text-slate-400 hover:bg-purple-950/40 hover:text-white'
@@ -481,7 +482,7 @@ export default function AdminDashboardPage() {
 
           <button
             onClick={() => setActiveTab('appearance')}
-            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`shrink-0 md:w-full min-h-[44px] flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer snap-start ${
               activeTab === 'appearance'
                 ? 'bg-purple-700/40 text-teal-300 border border-purple-500/50 shadow'
                 : 'text-slate-400 hover:bg-purple-950/40 hover:text-white'
@@ -495,7 +496,7 @@ export default function AdminDashboardPage() {
 
           <button
             onClick={() => setActiveTab('articles')}
-            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`shrink-0 md:w-full min-h-[44px] flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer snap-start ${
               activeTab === 'articles'
                 ? 'bg-purple-700/40 text-teal-300 border border-purple-500/50 shadow'
                 : 'text-slate-400 hover:bg-purple-950/40 hover:text-white'
@@ -510,10 +511,11 @@ export default function AdminDashboardPage() {
             </span>
           </button>
 
-          <div className="pt-8 px-2 text-[11px] text-slate-500 space-y-1">
-            <p>ðŸ”’ Zero Public Database APIs</p>
-            <p>ðŸ›¡ï¸ Private Admin Verification</p>
-            <p>âš¡ Official Instagram: @poochandi.in</p>
+          </div>
+          <div className="hidden md:block pt-8 px-2 text-[11px] text-slate-500 space-y-1">
+            <p>Zero Public Database APIs</p>
+            <p>Private Admin Verification</p>
+            <p>Official Instagram: @poochandi.in</p>
           </div>
         </aside>
 
@@ -534,7 +536,7 @@ export default function AdminDashboardPage() {
                   {selectedIds.length > 0 && (
                     <button
                       onClick={handleDeleteMultiple}
-                      className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+                      className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4" />
                       <span>Delete ({selectedIds.length})</span>
@@ -543,14 +545,14 @@ export default function AdminDashboardPage() {
                   <button
                     type="button"
                     onClick={openToCopyModal}
-                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs shadow-md transition-all cursor-pointer"
+                    className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs shadow-md transition-all cursor-pointer"
                   >
                     <Copy className="w-4 h-4" />
                     <span>TO COPY</span>
                   </button>
                   <a
                     href="/api/admin/complaint-names?export=csv"
-                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold text-xs shadow-md transition-all"
+                    className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-4 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold text-xs shadow-md transition-all"
                   >
                     <Download className="w-4 h-4" />
                     <span>Export to CSV</span>
@@ -566,11 +568,11 @@ export default function AdminDashboardPage() {
                     placeholder="Search by child name or ID..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-[#140b2e] border border-purple-800/60 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-400"
+                    className="w-full min-h-[44px] px-4 py-2.5 rounded-xl bg-[#140b2e] border border-purple-800/60 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-400"
                   />
                   <button
                     onClick={fetchComplaintNames}
-                    className="px-4 py-2 rounded-xl bg-purple-900/60 border border-purple-700/50 text-xs font-bold text-purple-200 cursor-pointer"
+                    className="min-h-[44px] px-4 py-2.5 rounded-xl bg-purple-900/60 border border-purple-700/50 text-xs font-bold text-purple-200 cursor-pointer"
                   >
                     Filter
                   </button>
@@ -581,7 +583,7 @@ export default function AdminDashboardPage() {
                   <select
                     value={sortOrder}
                     onChange={(e) => setSortOrder(e.target.value as any)}
-                    className="px-3 py-2 rounded-xl bg-[#140b2e] border border-purple-800/60 text-xs text-white"
+                    className="min-h-[44px] px-3 py-2 rounded-xl bg-[#140b2e] border border-purple-800/60 text-xs text-white"
                   >
                     <option value="newest">Newest First</option>
                     <option value="oldest">Oldest First</option>
@@ -589,8 +591,58 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              {/* Table */}
-              <div className="overflow-x-auto rounded-2xl border border-purple-800/40 bg-[#12082b]">
+              {/* Submissions: stackable cards on mobile, table on md+ */}
+              <div className="md:hidden space-y-3">
+                {complaintNames.length > 0 && (
+                  <label className="flex items-center gap-3 min-h-[44px] px-4 rounded-2xl border border-purple-800/40 bg-[#12082b] text-xs text-slate-300">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.length === complaintNames.length}
+                      onChange={toggleSelectAll}
+                      className="h-5 w-5"
+                    />
+                    <span className="font-semibold">Select all ({complaintNames.length})</span>
+                  </label>
+                )}
+                {complaintNames.length === 0 ? (
+                  <div className="rounded-2xl border border-purple-800/40 bg-[#12082b] px-4 py-8 text-center text-sm text-slate-500">
+                    {loadingNames ? 'Loading child names...' : 'No entries found in Complaint Name List.'}
+                  </div>
+                ) : (
+                  complaintNames.map((n, index) => (
+                    <div key={n.id} className="rounded-2xl border border-purple-800/40 bg-[#12082b] p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <label className="flex items-start gap-3 min-h-[44px] flex-1 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(n.id)}
+                            onChange={() => toggleSelectOne(n.id)}
+                            className="mt-1 h-5 w-5 shrink-0"
+                          />
+                          <div className="min-w-0">
+                            <p className="text-[11px] text-slate-500 font-semibold">#{index + 1} · <span className="font-mono text-teal-400">{n.id}</span></p>
+                            <p className="font-bold text-white text-base break-words">{n.child_name}</p>
+                          </div>
+                        </label>
+                        <button
+                          onClick={() => handleDeleteSingle(n.id)}
+                          className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-xl text-red-300 bg-red-950/50 border border-red-800/40 hover:bg-red-950/80 transition-colors cursor-pointer shrink-0"
+                          title="Delete entry"
+                          aria-label={`Delete ${n.child_name}`}
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="rounded-xl bg-[#0d0522] border border-purple-900/40 px-3 py-2"><span className="text-slate-500 block">Age</span><span className="text-white font-semibold">{n.child_age} Years</span></div>
+                        <div className="rounded-xl bg-[#0d0522] border border-purple-900/40 px-3 py-2 col-span-2 sm:col-span-1"><span className="text-slate-500 block">Submitted</span><span className="text-slate-300">{new Date(n.created_at).toLocaleString()}</span></div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="hidden md:block overflow-x-auto rounded-2xl border border-purple-800/40 bg-[#12082b]">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-[#180e38] text-slate-400 uppercase text-[10px] tracking-wider">
                     <tr>
@@ -599,6 +651,7 @@ export default function AdminDashboardPage() {
                           type="checkbox"
                           checked={complaintNames.length > 0 && selectedIds.length === complaintNames.length}
                           onChange={toggleSelectAll}
+                          className="h-4 w-4"
                         />
                       </th>
                       <th className="px-4 py-3 w-14">S.No</th>
@@ -624,6 +677,7 @@ export default function AdminDashboardPage() {
                               type="checkbox"
                               checked={selectedIds.includes(n.id)}
                               onChange={() => toggleSelectOne(n.id)}
+                              className="h-4 w-4"
                             />
                           </td>
                           <td className="px-4 py-3 text-slate-400 font-semibold">{index + 1}</td>
@@ -636,8 +690,9 @@ export default function AdminDashboardPage() {
                           <td className="px-4 py-3 text-right">
                             <button
                               onClick={() => handleDeleteSingle(n.id)}
-                              className="p-1.5 rounded-lg text-red-400 hover:bg-red-950/80 transition-colors cursor-pointer"
+                              className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg text-red-400 hover:bg-red-950/80 transition-colors cursor-pointer"
                               title="Delete entry"
+                              aria-label={`Delete ${n.child_name}`}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -691,7 +746,7 @@ export default function AdminDashboardPage() {
                     )}
                   </div>
                   <div className="space-y-3 w-full">
-                    <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-900/60 hover:bg-purple-800/60 border border-purple-600/40 text-teal-300 text-xs font-bold cursor-pointer transition-all">
+                    <label className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl bg-purple-900/60 hover:bg-purple-800/60 border border-purple-600/40 text-teal-300 text-xs font-bold cursor-pointer transition-all">
                       <Upload className="w-4 h-4" />
                       <span>{uploadingAvatar ? 'Uploading...' : 'Upload Official Poochandi Character'}</span>
                       <input type="file" accept="image/png, image/jpeg, image/webp" className="hidden" onChange={handleAvatarUpload} />
@@ -734,7 +789,7 @@ export default function AdminDashboardPage() {
                     )}
                   </div>
                   <div className="space-y-3 w-full">
-                    <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-900/60 hover:bg-purple-800/60 border border-purple-600/40 text-teal-300 text-xs font-bold cursor-pointer transition-all">
+                    <label className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl bg-purple-900/60 hover:bg-purple-800/60 border border-purple-600/40 text-teal-300 text-xs font-bold cursor-pointer transition-all">
                       <Upload className="w-4 h-4" />
                       <span>{uploadingLogo ? 'Uploading...' : 'Upload Website Logo'}</span>
                       <input type="file" accept="image/png, image/svg+xml" className="hidden" onChange={handleLogoUpload} />
@@ -773,9 +828,9 @@ export default function AdminDashboardPage() {
                           <button
                             type="button"
                             onClick={() => handleFetchPreview(idx)}
-                            className="px-3 py-1 rounded-lg bg-purple-900/60 text-purple-200 hover:text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+                            className="inline-flex items-center justify-center gap-1 min-h-[44px] px-3 py-2 rounded-lg bg-purple-900/60 text-purple-200 hover:text-white text-xs font-bold cursor-pointer"
                           >
-                            <Eye className="w-3 h-3" />
+                            <Eye className="w-4 h-4" />
                             <span>Preview</span>
                           </button>
                           <button
@@ -789,7 +844,7 @@ export default function AdminDashboardPage() {
                                 [`reel${idx}_thumbnail`]: '',
                               }));
                             }}
-                            className="text-red-400 hover:text-red-300 text-[11px] cursor-pointer"
+                            className="inline-flex items-center justify-center min-h-[44px] px-3 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-950/30 text-xs font-semibold cursor-pointer"
                           >
                             Remove
                           </button>
@@ -806,7 +861,7 @@ export default function AdminDashboardPage() {
                             onChange={(e) =>
                               setSettings({ ...settings, [`reel${idx}_url`]: e.target.value })
                             }
-                            className="w-full px-3 py-2 rounded-xl bg-[#140b2e] border border-purple-800 text-white"
+                            className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-[#140b2e] border border-purple-800 text-white"
                           />
                         </div>
                         <div>
@@ -818,7 +873,7 @@ export default function AdminDashboardPage() {
                             onChange={(e) =>
                               setSettings({ ...settings, [`reel${idx}_title`]: e.target.value })
                             }
-                            className="w-full px-3 py-2 rounded-xl bg-[#140b2e] border border-purple-800 text-white"
+                            className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-[#140b2e] border border-purple-800 text-white"
                           />
                         </div>
                       </div>
@@ -847,8 +902,8 @@ export default function AdminDashboardPage() {
                             )}
                           </div>
                           <div className="flex-1 space-y-2 w-full">
-                            <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-900/50 hover:bg-purple-800/50 border border-purple-700/40 text-teal-300 font-bold cursor-pointer">
-                              <Upload className="w-3.5 h-3.5" />
+                            <label className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-lg bg-purple-900/50 hover:bg-purple-800/50 border border-purple-700/40 text-teal-300 font-bold cursor-pointer">
+                              <Upload className="w-4 h-4" />
                               <span>{uploadingThumb === idx ? 'Uploading...' : 'Upload Thumbnail'}</span>
                               <input type="file" accept="image/*" className="hidden" onChange={(e) => handleThumbnailUpload(idx, e)} />
                             </label>
@@ -857,7 +912,7 @@ export default function AdminDashboardPage() {
                               placeholder="Or paste thumbnail/video preview image URL (Cloudinary, Imgur, etc.)"
                               value={settings[`reel${idx}_thumbnail`] || ''}
                               onChange={(e) => setSettings({ ...settings, [`reel${idx}_thumbnail`]: e.target.value })}
-                              className="w-full px-3 py-2 rounded-xl bg-[#140b2e] border border-purple-800 text-white"
+                              className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-[#140b2e] border border-purple-800 text-white"
                             />
                             <p className="text-[10px] text-slate-500">If Instagram preview doesnâ€™t fetch, upload the videoâ€™s cover image to cloud storage and paste its URL here. Keep Instagram link + title above. Then click <strong>Save All Video & Media Settings</strong>.</p>
                           </div>
@@ -889,12 +944,33 @@ export default function AdminDashboardPage() {
                   <h2 className="text-2xl font-black text-white">Manage Parenting Articles / கட்டுரைகள் மேலாண்மை</h2>
                   <p className="text-xs text-slate-400">Create, edit, and delete bilingual parenting guides. Changes publish to the live website.</p>
                 </div>
-                <button onClick={openCreateArticle} className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#FACC15] to-amber-500 text-slate-950 font-bold text-xs shadow-md cursor-pointer">
+                <button onClick={openCreateArticle} className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#FACC15] to-amber-500 text-slate-950 font-bold text-xs shadow-md cursor-pointer">
                   <Plus className="w-4 h-4" /><span>+ Create New</span>
                 </button>
               </div>
               {statusMessage && <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-semibold">{statusMessage}</div>}
-              <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-[#181A20]">
+              <div className="md:hidden space-y-3">
+                {articles.length === 0 ? (
+                  <div className="rounded-2xl border border-slate-800 bg-[#181A20] px-4 py-8 text-center text-sm text-slate-500">No articles found.</div>
+                ) : articles.map((art) => (
+                  <article key={art.id} className="rounded-2xl border border-slate-800 bg-[#181A20] p-4 space-y-3">
+                    <div>
+                      <div className="font-bold text-white break-words">{art.title_en}</div>
+                      <div className="text-purple-300 mt-0.5 break-words">{art.title_ta}</div>
+                    </div>
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <span className="px-2 py-1 rounded bg-[#0D0E12] border border-slate-700 text-[#FACC15] font-semibold">{art.category}</span>
+                      <span className="font-mono text-[11px] text-slate-400 break-all">/{art.slug}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 pt-1">
+                      <Link href={`/en/parenting-guides/${art.slug}`} target="_blank" className="inline-flex items-center justify-center min-h-[44px] px-2 rounded-lg border border-slate-700 text-teal-300 hover:bg-slate-800 text-xs font-semibold">Preview</Link>
+                      <button type="button" onClick={() => openEditArticle(art)} className="inline-flex items-center justify-center gap-1 min-h-[44px] px-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white cursor-pointer text-xs font-semibold"><Pencil className="w-4 h-4" />Edit</button>
+                      <button type="button" onClick={() => handleDeleteArticle(art)} className="inline-flex items-center justify-center gap-1 min-h-[44px] px-2 rounded-lg bg-red-600 hover:bg-red-700 text-white cursor-pointer text-xs font-semibold"><Trash2 className="w-4 h-4" />Delete</button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+              <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-800 bg-[#181A20]">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-[#0D0E12] text-slate-400 uppercase text-[10px] tracking-wider">
                     <tr><th className="px-4 py-3">Title (EN / TA)</th><th className="px-4 py-3">Category</th><th className="px-4 py-3">Slug</th><th className="px-4 py-3 text-right">Actions</th></tr>
@@ -909,9 +985,9 @@ export default function AdminDashboardPage() {
                         <td className="px-4 py-3 font-mono text-[11px] text-slate-400">/{art.slug}</td>
                         <td className="px-4 py-3">
                           <div className="flex justify-end gap-2">
-                            <Link href={`/en/parenting-guides/${art.slug}`} target="_blank" className="px-2.5 py-1.5 rounded-lg border border-slate-700 text-teal-300 hover:bg-slate-800">Preview</Link>
-                            <button type="button" onClick={() => openEditArticle(art)} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white cursor-pointer"><Pencil className="w-3.5 h-3.5" />Edit</button>
-                            <button type="button" onClick={() => handleDeleteArticle(art)} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white cursor-pointer"><Trash2 className="w-3.5 h-3.5" />Delete</button>
+                            <Link href={`/en/parenting-guides/${art.slug}`} target="_blank" className="inline-flex items-center justify-center min-h-[44px] px-3 rounded-lg border border-slate-700 text-teal-300 hover:bg-slate-800">Preview</Link>
+                            <button type="button" onClick={() => openEditArticle(art)} className="inline-flex items-center justify-center gap-1 min-h-[44px] px-3 rounded-lg bg-slate-700 hover:bg-slate-600 text-white cursor-pointer"><Pencil className="w-3.5 h-3.5" />Edit</button>
+                            <button type="button" onClick={() => handleDeleteArticle(art)} className="inline-flex items-center justify-center gap-1 min-h-[44px] px-3 rounded-lg bg-red-600 hover:bg-red-700 text-white cursor-pointer"><Trash2 className="w-3.5 h-3.5" />Delete</button>
                           </div>
                         </td>
                       </tr>
@@ -931,30 +1007,30 @@ export default function AdminDashboardPage() {
                     <h3 className="text-xl font-black text-white">{editingArticle ? 'Edit Article' : 'Add New Article'}</h3>
                     <p className="text-xs text-slate-400 mt-1">Bilingual parenting guide — English & Tamil</p>
                   </div>
-                  <button type="button" onClick={() => setShowArticleModal(false)} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"><X className="w-5 h-5" /></button>
+                  <button type="button" onClick={() => setShowArticleModal(false)} className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer" aria-label="Close"><X className="w-5 h-5" /></button>
                 </div>
                 <form onSubmit={handleSaveArticle} className="space-y-4 text-sm">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><label className="block text-slate-300 font-semibold mb-1">English Title</label><input required value={articleForm.title_en} onChange={(e)=>setArticleForm({...articleForm,title_en:e.target.value})} className="w-full px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
-                    <div><label className="block text-slate-300 font-semibold mb-1">Tamil Title</label><input required value={articleForm.title_ta} onChange={(e)=>setArticleForm({...articleForm,title_ta:e.target.value})} className="w-full px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
+                    <div><label className="block text-slate-300 font-semibold mb-1">English Title</label><input required value={articleForm.title_en} onChange={(e)=>setArticleForm({...articleForm,title_en:e.target.value})} className="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
+                    <div><label className="block text-slate-300 font-semibold mb-1">Tamil Title</label><input required value={articleForm.title_ta} onChange={(e)=>setArticleForm({...articleForm,title_ta:e.target.value})} className="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div><label className="block text-slate-300 font-semibold mb-1">Slug (optional)</label><input value={articleForm.slug} onChange={(e)=>setArticleForm({...articleForm,slug:e.target.value})} placeholder="auto-from English title" className="w-full px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
-                    <div><label className="block text-slate-300 font-semibold mb-1">Category</label><input value={articleForm.category} onChange={(e)=>setArticleForm({...articleForm,category:e.target.value})} className="w-full px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
-                    <div><label className="block text-slate-300 font-semibold mb-1">Read Time</label><input value={articleForm.read_time} onChange={(e)=>setArticleForm({...articleForm,read_time:e.target.value})} className="w-full px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
+                    <div><label className="block text-slate-300 font-semibold mb-1">Slug (optional)</label><input value={articleForm.slug} onChange={(e)=>setArticleForm({...articleForm,slug:e.target.value})} placeholder="auto-from English title" className="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
+                    <div><label className="block text-slate-300 font-semibold mb-1">Category</label><input value={articleForm.category} onChange={(e)=>setArticleForm({...articleForm,category:e.target.value})} className="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
+                    <div><label className="block text-slate-300 font-semibold mb-1">Read Time</label><input value={articleForm.read_time} onChange={(e)=>setArticleForm({...articleForm,read_time:e.target.value})} className="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><label className="block text-slate-300 font-semibold mb-1">English Overview (1–2 lines)</label><textarea required rows={2} value={articleForm.excerpt_en} onChange={(e)=>setArticleForm({...articleForm,excerpt_en:e.target.value})} className="w-full px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
-                    <div><label className="block text-slate-300 font-semibold mb-1">Tamil Overview (1–2 lines)</label><textarea required rows={2} value={articleForm.excerpt_ta} onChange={(e)=>setArticleForm({...articleForm,excerpt_ta:e.target.value})} className="w-full px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
+                    <div><label className="block text-slate-300 font-semibold mb-1">English Overview (1–2 lines)</label><textarea required rows={2} value={articleForm.excerpt_en} onChange={(e)=>setArticleForm({...articleForm,excerpt_en:e.target.value})} className="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
+                    <div><label className="block text-slate-300 font-semibold mb-1">Tamil Overview (1–2 lines)</label><textarea required rows={2} value={articleForm.excerpt_ta} onChange={(e)=>setArticleForm({...articleForm,excerpt_ta:e.target.value})} className="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><label className="block text-slate-300 font-semibold mb-1">English Main Content (multi-line)</label><textarea required rows={10} value={articleForm.content_en} onChange={(e)=>setArticleForm({...articleForm,content_en:e.target.value})} className="w-full px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white font-mono text-xs" /></div>
                     <div><label className="block text-slate-300 font-semibold mb-1">Tamil Main Content (multi-line)</label><textarea required rows={10} value={articleForm.content_ta} onChange={(e)=>setArticleForm({...articleForm,content_ta:e.target.value})} className="w-full px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white font-mono text-xs" /></div>
                   </div>
-                  <div><label className="block text-slate-300 font-semibold mb-1">SEO Target Keywords (comma separated)</label><input value={articleForm.seo_keywords} onChange={(e)=>setArticleForm({...articleForm,seo_keywords:e.target.value})} placeholder="keyword 1, keyword 2" className="w-full px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
+                  <div><label className="block text-slate-300 font-semibold mb-1">SEO Target Keywords (comma separated)</label><input value={articleForm.seo_keywords} onChange={(e)=>setArticleForm({...articleForm,seo_keywords:e.target.value})} placeholder="keyword 1, keyword 2" className="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-[#0D0E12] border border-slate-700 text-white" /></div>
                   <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                    <button type="submit" disabled={articleSaving} className="flex-1 px-5 py-3 rounded-xl bg-gradient-to-r from-[#FACC15] to-amber-500 text-slate-950 font-black cursor-pointer disabled:opacity-60">{articleSaving ? 'Saving...' : (editingArticle ? 'Save Changes' : 'Publish / Save')}</button>
-                    <button type="button" onClick={() => setShowArticleModal(false)} className="px-5 py-3 rounded-xl border border-slate-600 text-slate-200 font-bold cursor-pointer">Cancel</button>
+                    <button type="submit" disabled={articleSaving} className="flex-1 min-h-[44px] px-5 py-3 rounded-xl bg-gradient-to-r from-[#FACC15] to-amber-500 text-slate-950 font-black cursor-pointer disabled:opacity-60">{articleSaving ? 'Saving...' : (editingArticle ? 'Save Changes' : 'Publish / Save')}</button>
+                    <button type="button" onClick={() => setShowArticleModal(false)} className="min-h-[44px] px-5 py-3 rounded-xl border border-slate-600 text-slate-200 font-bold cursor-pointer">Cancel</button>
                   </div>
                 </form>
               </div>
@@ -970,7 +1046,7 @@ export default function AdminDashboardPage() {
                     <h3 className="text-xl font-black text-white">Randomly Select Names</h3>
                     <p className="text-xs text-slate-400 mt-1">Select random child names from the actual Complaint Name List database.</p>
                   </div>
-                  <button type="button" onClick={() => setShowToCopyModal(false)} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-purple-900/40 cursor-pointer" aria-label="Close">
+                  <button type="button" onClick={() => setShowToCopyModal(false)} className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg text-slate-400 hover:text-white hover:bg-purple-900/40 cursor-pointer" aria-label="Close">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
@@ -989,7 +1065,7 @@ export default function AdminDashboardPage() {
                           value={randomCountInput}
                           onChange={(e) => setRandomCountInput(e.target.value)}
                           placeholder=""
-                          className="w-20 px-2 py-1.5 rounded-lg bg-[#140b2e] border border-purple-700 text-white text-center font-bold"
+                          className="w-24 min-h-[44px] px-2 py-2 rounded-lg bg-[#140b2e] border border-purple-700 text-white text-center font-bold"
                         />
                         <span>of <strong className="text-teal-300">{toCopyEntries.map((n) => String(n.child_name ?? '').trim()).filter(Boolean).length}</strong> Entries</span>
                       </div>
@@ -999,7 +1075,7 @@ export default function AdminDashboardPage() {
                         type="button"
                         onClick={handleCopyRandomly}
                         disabled={toCopyEntries.length === 0}
-                        className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 text-slate-950 font-black text-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full sm:w-auto min-h-[44px] px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 text-slate-950 font-black text-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         COPY RANDOMLY
                       </button>
@@ -1024,7 +1100,7 @@ export default function AdminDashboardPage() {
                           <button
                             type="button"
                             onClick={handleCopyAllNames}
-                            className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-950 font-black text-sm cursor-pointer"
+                            className="flex-1 inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-950 font-black text-sm cursor-pointer"
                           >
                             <Copy className="w-4 h-4" />
                             COPY ALL NAMES
@@ -1032,7 +1108,7 @@ export default function AdminDashboardPage() {
                           <button
                             type="button"
                             onClick={handleSelectAgain}
-                            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-purple-900/60 hover:bg-purple-800/60 border border-purple-700/50 text-purple-100 font-bold text-sm cursor-pointer"
+                            className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-3 rounded-xl bg-purple-900/60 hover:bg-purple-800/60 border border-purple-700/50 text-purple-100 font-bold text-sm cursor-pointer"
                           >
                             <RefreshCw className="w-4 h-4" />
                             Select Again
