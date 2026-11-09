@@ -12,13 +12,16 @@ export default async function HomePage({ params }: HomePageProps) {
   const { lang: rawLang } = await params;
   const lang: Language = rawLang === 'ta' ? 'ta' : 'en';
   const dict = dictionaries[lang];
-  await initDb();
-
-  const settingsRows = await queryAll<{ key: string; value: string }>('SELECT key, value FROM site_settings');
-  const settings: Record<string, string> = {};
-  for (const row of settingsRows) settings[row.key] = row.value;
-
-  const articles = await queryAll<any>('SELECT id, slug, title_en, title_ta, excerpt_en, excerpt_ta, category, read_time FROM articles WHERE published = 1 ORDER BY created_at DESC LIMIT 4');
+  let settings: Record<string, string> = {};
+  let articles: any[] = [];
+  try {
+    await initDb();
+    const settingsRows = await queryAll<{ key: string; value: string }>('SELECT key, value FROM site_settings');
+    for (const row of settingsRows) settings[row.key] = row.value;
+    articles = await queryAll<any>('SELECT id, slug, title_en, title_ta, excerpt_en, excerpt_ta, category, read_time FROM articles WHERE published = 1 ORDER BY created_at DESC LIMIT 4');
+  } catch (e) {
+    console.error('Home page data load error:', e);
+  }
 
   const reels = [
     { title: settings.reel1_title || 'When Kids Refuse to Eat Veggies!', url: settings.reel1_url || 'https://instagram.com/poochandi_ig', thumb: settings.reel1_thumbnail || '/images/reel-thumb-1.svg', desc: settings.reel1_desc || 'Poochandi explains why greens give magical superhero energy.' },

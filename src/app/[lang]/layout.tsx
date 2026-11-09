@@ -67,7 +67,11 @@ export default async function LangLayout({
   children: React.ReactNode;
   params: Promise<{ lang: string }>;
 }) {
-  await seedInitialData();
+  try {
+    await seedInitialData();
+  } catch (e) {
+    console.error('Database init/seed error:', e);
+  }
   const { lang: rawLang } = await params;
   const lang: Language = rawLang === 'ta' ? 'ta' : 'en';
 

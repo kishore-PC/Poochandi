@@ -20,6 +20,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, entryId, childName: childName.trim(), childAge: ageNum });
   } catch (error) {
     console.error('Complaint name submission error:', error);
-    return NextResponse.json({ error: 'Failed to record entry. Please try again.' }, { status: 500 });
+    const msg = error instanceof Error ? error.message : '';
+    const safe = msg.includes('TURSO') || msg.includes('Database not configured') ? msg : 'Failed to record entry. Please try again.';
+    return NextResponse.json({ error: safe }, { status: msg.includes('Database not configured') ? 503 : 500 });
   }
 }

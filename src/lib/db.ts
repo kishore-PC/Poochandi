@@ -3,20 +3,27 @@ import path from 'path';
 import fs from 'fs';
 import bcrypt from 'bcryptjs';
 
-const dbDir = path.join(process.cwd(), 'data');
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
-}
-
-const localUrl = `file:${path.join(dbDir, 'poochandi.db').replace(/\\/g, '/')}`;
-const url = process.env.TURSO_DATABASE_URL || localUrl;
-const authToken = process.env.TURSO_AUTH_TOKEN;
-
 let client: Client | null = null;
 let initPromise: Promise<void> | null = null;
 
+function resolveConfig() {
+  const tursoUrl = process.env.TURSO_DATABASE_URL;
+  const authToken = process.env.TURSO_AUTH_TOKEN;
+  if (tursoUrl) return { url: tursoUrl, authToken };
+
+  // On Vercel/serverless, a local file DB is not persistent and filesystem writes may fail.
+  if (process.env.VERCEL) {
+    throw new Error('Database not configured. Set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN in Vercel environment variables.');
+  }
+
+  const dbDir = path.join(process.cwd(), 'data');
+  if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
+  const localUrl = `file:${path.join(dbDir, 'poochandi.db').replace(/\\/g, '/')}`;
+  return { url: localUrl, authToken };
+}
+
 export function getDb(): Client {
-  if (!client) client = createClient({ url, authToken });
+  if (!client) client = createClient(resolveConfig());
   return client;
 }
 
@@ -68,11 +75,7 @@ async function seedIfNeeded() {
     await execute('INSERT OR IGNORE INTO site_settings (key, value) VALUES (?, ?)', [key, value]);
   }
 
-  const countArticles = await queryOne<{ count: number }>('SELECT COUNT(*) as count FROM articles');
-  if (!countArticles || Number(countArticles.count) === 0) {
-    // Minimal seed marker; full article seed can be added via admin or a separate seed script.
-    // Keep init fast and idempotent. Existing projects may already have article seed logic.
-  }
+  await queryOne<{ count: number }>('SELECT COUNT(*) as count FROM articles');
 }
 
 export async function initDb(): Promise<void> {
@@ -86,9 +89,11 @@ export async function initDb(): Promise<void> {
       { sql: `CREATE TABLE IF NOT EXISTS admin_users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, created_at TEXT DEFAULT (datetime('now')))` },
     ]);
     await seedIfNeeded();
-  })();
+  })().catch((err) => {
+    initPromise = null; // allow retry after config fixes
+    throw err;
+  });
   return initPromise;
 }
 
-// Backward-compatible default export placeholder is removed; update imports to named async helpers.
 export default { getDb, queryAll, queryOne, execute, batch, initDb };
