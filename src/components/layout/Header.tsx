@@ -8,9 +8,10 @@ import { Menu, X, Sparkles, Send, BookOpen, Info, Mail, Globe } from 'lucide-rea
 
 interface HeaderProps {
   lang: Language;
+  logoUrl?: string;
 }
 
-export default function Header({ lang }: HeaderProps) {
+export default function Header({ lang, logoUrl }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const dict = dictionaries[lang];
@@ -43,10 +44,14 @@ export default function Header({ lang }: HeaderProps) {
           
           {/* Brand Logo & Tagline */}
           <Link href={`/${lang}`} className="flex items-center gap-3 group">
-            <div className="relative w-12 h-12 rounded-full bg-gradient-to-tr from-purple-800 to-teal-600 p-0.5 shadow-lg shadow-purple-900/50 group-hover:scale-105 transition-transform duration-300">
-              <div className="w-full h-full bg-[#160d31] rounded-full flex items-center justify-center overflow-hidden">
-                <span className="text-2xl animate-pulse">🧙🏽‍♂️</span>
-              </div>
+            <div className="relative w-12 h-12 rounded-full bg-gradient-to-tr from-purple-800 to-teal-600 p-0.5 shadow-lg shadow-purple-900/50 group-hover:scale-105 transition-transform duration-300 overflow-hidden">
+              {logoUrl ? (
+                <img src={logoUrl} alt="Poochandi logo" className="w-full h-full rounded-full object-cover bg-[#160d31]" />
+              ) : (
+                <div className="w-full h-full bg-[#160d31] rounded-full flex items-center justify-center overflow-hidden">
+                  <span className="text-2xl animate-pulse">🧙🏽‍♂️</span>
+                </div>
+              )}
             </div>
             <div className="flex flex-col">
               <span className="text-xl sm:text-2xl font-black tracking-wider text-gradient-magic">

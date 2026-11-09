@@ -6,9 +6,10 @@ import { InstagramIcon, YoutubeIcon } from '@/components/icons/SocialIcons';
 
 interface FooterProps {
   lang: Language;
+  logoUrl?: string;
 }
 
-export default function Footer({ lang }: FooterProps) {
+export default function Footer({ lang, logoUrl }: FooterProps) {
   const dict = dictionaries[lang];
 
   return (
@@ -22,6 +23,7 @@ export default function Footer({ lang }: FooterProps) {
           {/* Brand Info */}
           <div className="md:col-span-2 space-y-4">
             <Link href={`/${lang}`} className="inline-flex items-center gap-3">
+              {logoUrl ? <img src={logoUrl} alt="Poochandi logo" className="h-10 w-10 rounded-full object-cover border border-purple-700/40" /> : null}
               <span className="text-2xl font-black tracking-wider text-gradient-magic">
                 POOCHANDI
               </span>

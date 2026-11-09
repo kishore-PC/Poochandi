@@ -53,6 +53,7 @@ export default function AdminDashboardPage() {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
 
   useEffect(() => {
     fetchComplaintNames();
@@ -155,6 +156,8 @@ export default function AdminDashboardPage() {
       if (data.url) {
         setAvatarPreview(data.url);
         setSettings((prev) => ({ ...prev, character_hero_url: data.url }));
+        setStatusMessage('Avatar updated successfully!');
+        setTimeout(() => setStatusMessage(''), 3500);
       }
     } catch (err: any) {
       console.error(err);
@@ -181,6 +184,8 @@ export default function AdminDashboardPage() {
       if (data.url) {
         setLogoPreview(data.url);
         setSettings((prev) => ({ ...prev, logo_url: data.url }));
+        setStatusMessage('Website logo updated successfully!');
+        setTimeout(() => setStatusMessage(''), 3500);
       }
     } catch (err: any) {
       console.error(err);
@@ -215,15 +220,18 @@ export default function AdminDashboardPage() {
     e.preventDefault();
     setSavingSettings(true);
     try {
-      await fetch('/api/admin/settings', {
+      const res = await fetch('/api/admin/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),
       });
+      if (!res.ok) throw new Error('Failed to save settings');
       setSettingsSaved(true);
-      setTimeout(() => setSettingsSaved(false), 3000);
-    } catch (e) {
+      setStatusMessage('Settings saved successfully! Your changes will reflect on the website.');
+      setTimeout(() => { setSettingsSaved(false); setStatusMessage(''); }, 3500);
+    } catch (e: any) {
       console.error(e);
+      alert(e?.message || 'Failed to save settings');
     } finally {
       setSavingSettings(false);
     }
@@ -456,10 +464,10 @@ export default function AdminDashboardPage() {
                 </p>
               </div>
 
-              {settingsSaved && (
+              {(settingsSaved || statusMessage) && (
                 <div className="p-4 rounded-xl bg-emerald-950/70 border border-emerald-500/50 text-emerald-300 text-xs flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>Media & settings successfully saved and updated across the live website!</span>
+                  <span>{statusMessage || 'Media & settings successfully saved and updated across the live website!'}</span>
                 </div>
               )}
 

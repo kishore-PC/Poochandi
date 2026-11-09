@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
-import { Language, dictionaries } from '@/lib/i18n';
+import { Language } from '@/lib/i18n';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { seedInitialData } from '@/lib/seed';
+import { queryAll } from '@/lib/db';
 
 // Database priming is handled per-request in server components/routes via initDb()/seedInitialData() where needed.
 
@@ -67,8 +68,11 @@ export default async function LangLayout({
   children: React.ReactNode;
   params: Promise<{ lang: string }>;
 }) {
+  let logoUrl = '/images/poochandi-logo.svg';
   try {
     await seedInitialData();
+    const rows = await queryAll<{ key: string; value: string }>("SELECT key, value FROM site_settings WHERE key = 'logo_url'");
+    if (rows[0]?.value) logoUrl = rows[0].value;
   } catch (e) {
     console.error('Database init/seed error:', e);
   }
@@ -77,9 +81,9 @@ export default async function LangLayout({
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0b051b] text-slate-100 selection:bg-teal-500 selection:text-slate-950">
-      <Header lang={lang} />
+      <Header lang={lang} logoUrl={logoUrl} />
       <main className="flex-1">{children}</main>
-      <Footer lang={lang} />
+      <Footer lang={lang} logoUrl={logoUrl} />
     </div>
   );
 }
