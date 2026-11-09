@@ -51,9 +51,16 @@ export default async function HomePage({ params }: HomePageProps) {
                   <Link href={`/${lang}/complaint-name-list`} className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-slate-950 font-black text-sm shadow-lg shadow-orange-500/30 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"><Send className="w-4 h-4 text-slate-950" /><span>{dict.hero.btn1}</span></Link>
                   <Link href={`/${lang}/parenting-guides`} className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-[#1d103f] hover:bg-[#271654] border border-purple-700/50 text-purple-200 font-bold text-sm hover:scale-[1.02] transition-all flex items-center justify-center gap-2"><BookOpen className="w-4 h-4 text-teal-400" /><span>{dict.hero.btn2}</span></Link>
                 </div>
-                <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-950/90 via-[#231247] to-purple-950/90 border border-teal-500/40 shadow-xl max-w-lg mx-auto lg:mx-0">
-                  <p className="text-xs sm:text-sm font-semibold text-teal-300 mb-2.5 text-center lg:text-left">✨ {dict.hero.btn3Prompt}</p>
-                  <a href="https://ig.me/m/poochandi.in" target="_blank" rel="noopener noreferrer" className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-pink-500 via-purple-600 to-teal-500 hover:opacity-95 text-white font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-pink-500/25 transition-all hover:scale-[1.01]"><InstagramIcon className="w-4 h-4" /><span>{dict.hero.btn3Text}</span></a>
+                <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-purple-950/95 via-[#24124a] to-pink-950/30 border border-pink-500/30 shadow-xl max-w-xl mx-auto lg:mx-0 space-y-4">
+                  <div className="text-center lg:text-left space-y-1.5">
+                    <p className="text-sm sm:text-base font-black tracking-wide text-white">EXCLUSIVE SPECIAL VIDEOS</p>
+                    <p className="text-sm sm:text-[15px] font-semibold text-teal-200 leading-snug">For Your Children &mdash; With Picture &amp; Name</p>
+                    <p className="inline-flex text-[11px] sm:text-xs font-bold tracking-widest text-amber-300 bg-amber-500/10 border border-amber-400/30 px-2.5 py-0.5 rounded-md">(PAID)</p>
+                  </div>
+                  <a href="https://ig.me/m/poochandi.in" target="_blank" rel="noopener noreferrer" className="w-full py-3.5 sm:py-4 px-6 rounded-xl bg-gradient-to-r from-[#f58529] via-[#dd2a7b] to-[#8134af] hover:brightness-110 text-white font-black text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-lg shadow-pink-600/30 transition-all hover:scale-[1.01]">
+                    <InstagramIcon className="w-5 h-5" />
+                    <span>DM US ON INSTAGRAM</span>
+                  </a>
                 </div>
               </div>
               <div className="pt-4 flex items-center justify-center lg:justify-start gap-6 text-xs text-slate-400">
