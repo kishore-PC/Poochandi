@@ -176,19 +176,21 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const getValidCopyNames = () => toCopyEntries.map((n) => String(n.child_name ?? '').trim()).filter(Boolean);
+
   const pickRandomNames = (count: number) => {
-    const pool = [...toCopyEntries];
+    const pool = getValidCopyNames();
     for (let i = pool.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [pool[i], pool[j]] = [pool[j], pool[i]];
     }
-    return pool.slice(0, count).map((n) => String(n.child_name ?? ''));
+    return pool.slice(0, count);
   };
 
   const handleCopyRandomly = () => {
     setCopyError('');
     setCopyStatus('');
-    const total = toCopyEntries.length;
+    const total = getValidCopyNames().length;
     if (total === 0) {
       setCopyError('No entries available.');
       return;
@@ -214,12 +216,15 @@ export default function AdminDashboardPage() {
     setSelectedRandomNames(pickRandomNames(count));
   };
 
+  const formatNamesForCopy = (names: string[]) => names.map((n) => String(n ?? '').trim()).filter(Boolean).join('\n');
+
   const handleCopyAllNames = async () => {
-    if (selectedRandomNames.length === 0) return;
-    const text = selectedRandomNames.join('\n\n');
+    const text = formatNamesForCopy(selectedRandomNames);
+    if (!text) return;
     try {
       await navigator.clipboard.writeText(text);
-      setCopyStatus(`Successfully copied ${selectedRandomNames.length} names!`);
+      const count = text.split('\n').filter(Boolean).length;
+      setCopyStatus(`Successfully copied ${count} names!`);
       setCopyError('');
     } catch (e) {
       console.error(e);
@@ -228,7 +233,7 @@ export default function AdminDashboardPage() {
   };
 
   const handleSelectAgain = () => {
-    const total = toCopyEntries.length;
+    const total = getValidCopyNames().length;
     const raw = randomCountInput.trim();
     const count = /^\d+$/.test(raw) ? Number(raw) : 0;
     if (count >= 1 && count <= total && total > 0) {
@@ -985,9 +990,9 @@ export default function AdminDashboardPage() {
                           placeholder=""
                           className="w-20 px-2 py-1.5 rounded-lg bg-[#140b2e] border border-purple-700 text-white text-center font-bold"
                         />
-                        <span>of <strong className="text-teal-300">{toCopyEntries.length}</strong> Entries</span>
+                        <span>of <strong className="text-teal-300">{toCopyEntries.map((n) => String(n.child_name ?? '').trim()).filter(Boolean).length}</strong> Entries</span>
                       </div>
-                      {toCopyEntries.length === 0 && <p className="text-xs text-amber-300">No entries available.</p>}
+                      {toCopyEntries.map((n) => String(n.child_name ?? '').trim()).filter(Boolean).length === 0 && <p className="text-xs text-amber-300">No entries available.</p>}
                       {copyError && <p className="text-xs text-red-300">{copyError}</p>}
                       <button
                         type="button"
@@ -1004,8 +1009,8 @@ export default function AdminDashboardPage() {
                         <h4 className="text-sm font-black text-teal-300">Your Selected Names â€” Ready to Copy</h4>
                         <textarea
                           readOnly
-                          value={selectedRandomNames.join('\n\n')}
-                          className="w-full min-h-[180px] px-3 py-3 rounded-xl bg-[#140b2e] border border-purple-800 text-white text-sm leading-relaxed resize-y"
+                          value={selectedRandomNames.map((n) => String(n ?? '').trim()).filter(Boolean).join('\n')}
+                          className="w-full min-h-[180px] px-3 py-3 rounded-xl bg-[#140b2e] border border-purple-800 text-white text-sm leading-6 whitespace-pre-line resize-y"
                           aria-label="Selected names"
                         />
                         <p className="text-[11px] text-slate-500">Names only, one per line. No serial numbers, ages, dates, or IDs.</p>
