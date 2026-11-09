@@ -23,8 +23,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, requestId, childName: String(childName).trim(), behavior });
   } catch (error) {
     console.error('Submission error:', error);
-    const msg = error instanceof Error ? error.message : '';
-    const safe = msg.includes('TURSO') || msg.includes('Database not configured') ? msg : 'Failed to process request. Please try again.';
-    return NextResponse.json({ error: safe }, { status: msg.includes('Database not configured') ? 503 : 500 });
+    const msg = error instanceof Error ? error.message : 'Unknown error';
+    const isConfig = msg.includes('Database not configured');
+    return NextResponse.json({ error: isConfig ? msg : `Failed to process request: ${msg}` }, { status: isConfig ? 503 : 500 });
   }
 }
