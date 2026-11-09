@@ -19,6 +19,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const adsenseClient = process.env.NEXT_PUBLIC_ADSENSE_PUB_ID;
+  const adsenseEnabled = !!adsenseClient && adsenseClient !== 'ca-pub-0000000000000000' && adsenseClient !== 'ca-pub-XXXXXXXXXXXXXXXX';
+
   return (
     <html lang="en" className={inter.variable}>
       <body className={`${inter.className} antialiased bg-[#0b051b] text-slate-100`}>
@@ -34,6 +37,14 @@ export default function RootLayout({
             gtag('config', 'G-37K1D73DXL');
           `}
         </Script>
+        {adsenseEnabled ? (
+          <Script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`}
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        ) : null}
         {children}
       </body>
     </html>
