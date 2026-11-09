@@ -4,12 +4,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { seedInitialData } from '@/lib/seed';
 
-// Ensure database and sample data are primed
-try {
-  seedInitialData();
-} catch (e) {
-  console.error('Database priming error:', e);
-}
+// Database priming is handled per-request in server components/routes via initDb()/seedInitialData() where needed.
 
 export const dynamic = 'force-dynamic';
 
@@ -72,6 +67,7 @@ export default async function LangLayout({
   children: React.ReactNode;
   params: Promise<{ lang: string }>;
 }) {
+  await seedInitialData();
   const { lang: rawLang } = await params;
   const lang: Language = rawLang === 'ta' ? 'ta' : 'en';
 
