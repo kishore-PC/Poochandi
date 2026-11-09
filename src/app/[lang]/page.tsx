@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Language, dictionaries } from '@/lib/i18n';
 import { initDb, queryAll } from '@/lib/db';
@@ -70,7 +71,7 @@ export default async function HomePage({ params }: HomePageProps) {
             </div>
             <div className="lg:col-span-5 flex justify-center">
               <div className="relative w-72 sm:w-96 lg:w-[420px] aspect-square rounded-3xl p-4 bg-gradient-to-b from-purple-900/30 via-[#190d3d]/60 to-[#0b051b] border border-purple-700/40 shadow-2xl shadow-purple-950/80">
-                <img src={settings.character_hero_url || '/images/poochandi-hero.svg'} alt="Poochandi Official Character by Poochandi Varaan" width={420} height={420} fetchPriority="high" decoding="async" className="w-full h-full object-contain filter drop-shadow-[0_10px_25px_rgba(168,85,247,0.4)] animate-bounce-slow" />
+                <Image src={settings.character_hero_url || '/images/poochandi-hero.svg'} alt="Poochandi Official Character by Poochandi Varaan" width={420} height={420} sizes="(max-width: 640px) 288px, (max-width: 1024px) 384px, 420px" priority className="w-full h-full object-contain filter drop-shadow-[0_10px_25px_rgba(168,85,247,0.4)] animate-bounce-slow" />
                 <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-[#180e38] border border-purple-500/50 text-[11px] font-bold text-teal-300 shadow-lg flex items-center gap-1.5 whitespace-nowrap"><Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /><span>Official Poochandi Avatar</span></div>
               </div>
             </div>
@@ -88,7 +89,7 @@ export default async function HomePage({ params }: HomePageProps) {
             {reels.map((reel, index) => (
               <div key={index} className="group relative rounded-2xl bg-[#170c36] border border-purple-800/40 overflow-hidden shadow-lg hover:border-purple-500/60 transition-all duration-300 flex flex-col">
                 <div className="relative aspect-[4/5] bg-purple-950/50 overflow-hidden">
-                  <img src={reel.thumb} alt={reel.title} width={400} height={500} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <Image src={reel.thumb} alt={reel.title} width={400} height={500} sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0e0725] via-transparent to-transparent opacity-80" />
                   <a href={reel.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 flex items-center justify-center" aria-label={`Play ${reel.title}`}><div className="w-14 h-14 rounded-full bg-orange-500 group-hover:bg-orange-400 flex items-center justify-center text-slate-950 shadow-xl shadow-orange-500/40 group-hover:scale-110 transition-transform"><Play className="w-6 h-6 fill-slate-950 translate-x-0.5" /></div></a>
                   <div className="absolute top-3 right-3 bg-pink-600/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow"><InstagramIcon className="w-3 h-3" />Reel</div>

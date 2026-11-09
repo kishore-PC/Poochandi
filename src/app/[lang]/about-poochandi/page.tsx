@@ -1,4 +1,5 @@
 ﻿import React from 'react';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import { Language, dictionaries } from '@/lib/i18n';
 import { initDb, queryAll } from '@/lib/db';
@@ -34,7 +35,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
           <p className="text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">{dict.about.lead}</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 items-center mb-16 bg-[#13092d] p-8 sm:p-12 rounded-3xl border border-purple-800/40">
-          <div className="md:col-span-5 flex justify-center"><div className="relative w-64 h-64 rounded-2xl bg-gradient-to-tr from-purple-900 to-teal-800/30 p-4 border border-purple-700/50 flex items-center justify-center"><img src={settings.character_hero_url || '/images/poochandi-hero.svg'} alt="Poochandi Mascot" className="w-full h-full object-contain filter drop-shadow-xl" /></div></div>
+          <div className="md:col-span-5 flex justify-center"><div className="relative w-64 h-64 rounded-2xl bg-gradient-to-tr from-purple-900 to-teal-800/30 p-4 border border-purple-700/50 flex items-center justify-center"><Image src={settings.character_hero_url || '/images/poochandi-hero.svg'} alt="Poochandi Mascot" fill sizes="256px" className="object-contain filter drop-shadow-xl p-4" /></div></div>
           <div className="md:col-span-7 space-y-4">
             <h2 className="text-2xl font-black text-white text-gradient-magic">{dict.about.storyTitle}</h2>
             <p className="text-slate-300 text-sm leading-relaxed">{dict.about.storyP1}</p>

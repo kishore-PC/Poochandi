@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Language, dictionaries } from '@/lib/i18n';
@@ -45,7 +46,7 @@ export default function Header({ lang, logoUrl }: HeaderProps) {
           <Link href={`/${lang}`} className="flex items-center gap-3 group">
             <div className="w-12 h-12 shrink-0 group-hover:scale-105 transition-transform duration-300 flex items-center justify-center">
               {logoUrl ? (
-                <img src={logoUrl} alt="Poochandi logo" width={48} height={48} decoding="async" className="w-full h-full object-contain" />
+                <Image src={logoUrl} alt="Poochandi logo" width={48} height={48} sizes="48px" priority className="w-full h-full object-contain" />
               ) : (
                 <span className="text-2xl animate-pulse">🧙🏽‍♂️</span>
               )}

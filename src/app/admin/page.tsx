@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -682,9 +683,9 @@ export default function AdminDashboardPage() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-6 pt-2">
-                  <div className="w-32 h-32 rounded-2xl bg-[#0c051f] border border-purple-700/50 p-2 flex items-center justify-center overflow-hidden shrink-0">
+                  <div className="relative w-32 h-32 rounded-2xl bg-[#0c051f] border border-purple-700/50 p-2 flex items-center justify-center overflow-hidden shrink-0">
                     {(settings.character_hero_url || avatarPreview) ? (
-                      <img src={settings.character_hero_url || avatarPreview} alt="Hero Character Preview" className="w-full h-full object-contain" />
+                      <Image src={settings.character_hero_url || avatarPreview} alt="Hero Character Preview" fill sizes="128px" className="object-contain p-2" />
                     ) : (
                       <span className="text-xs text-slate-500">No Image</span>
                     )}
@@ -725,9 +726,9 @@ export default function AdminDashboardPage() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-6 pt-2">
-                  <div className="w-48 h-20 rounded-2xl bg-[#0c051f] border border-purple-700/50 p-2 flex items-center justify-center overflow-hidden shrink-0">
+                  <div className="relative w-48 h-20 rounded-2xl bg-[#0c051f] border border-purple-700/50 p-2 flex items-center justify-center overflow-hidden shrink-0">
                     {(settings.logo_url || logoPreview) ? (
-                      <img src={settings.logo_url || logoPreview} alt="Logo Preview" className="w-full h-full object-contain" />
+                      <Image src={settings.logo_url || logoPreview} alt="Logo Preview" fill sizes="192px" className="object-contain p-2" />
                     ) : (
                       <span className="text-xs text-slate-500">No Logo</span>
                     )}
@@ -838,9 +839,9 @@ export default function AdminDashboardPage() {
                       <div className="text-xs border-t border-purple-900/30 pt-4">
                         <label className="block text-slate-300 font-semibold mb-2">Thumbnail / Video Preview Image (shown on home page)</label>
                         <div className="flex flex-col sm:flex-row gap-4 items-start">
-                          <div className="w-28 h-20 rounded-xl bg-[#140b2e] border border-purple-800/60 overflow-hidden flex items-center justify-center shrink-0">
+                          <div className="relative w-28 h-20 rounded-xl bg-[#140b2e] border border-purple-800/60 overflow-hidden flex items-center justify-center shrink-0">
                             {settings[`reel${idx}_thumbnail`] ? (
-                              <img src={settings[`reel${idx}_thumbnail`]} alt={`Reel ${idx} thumbnail`} className="w-full h-full object-cover" />
+                              <Image src={settings[`reel${idx}_thumbnail`]} alt={`Reel ${idx} thumbnail`} fill sizes="112px" className="object-cover" />
                             ) : (
                               <span className="text-[10px] text-slate-500 px-2 text-center">No preview</span>
                             )}

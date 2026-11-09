@@ -10,6 +10,8 @@ const ArticleContentView = dynamic(() => import('@/components/articles/ArticleCo
   loading: () => <div className="py-12 text-center text-slate-400">Loading article...</div>,
 });
 
+export const revalidate = 3600;
+
 interface ArticlePageProps { params: Promise<{ lang: string; slug: string }> }
 
 function trimDesc(text: string, max = 160) {

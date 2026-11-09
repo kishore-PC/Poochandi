@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Language, dictionaries } from '@/lib/i18n';
 import { ShieldCheck } from 'lucide-react';
@@ -29,7 +30,7 @@ export default function Footer({ lang, logoUrl }: FooterProps) {
           {/* Brand Info */}
           <div className="md:col-span-2 space-y-4">
             <Link href={`/${lang}`} className="inline-flex items-center gap-3">
-              {logoUrl ? <img src={logoUrl} alt="Poochandi logo" width={40} height={40} loading="lazy" decoding="async" className="h-10 w-10 object-contain" /> : null}
+              {logoUrl ? <Image src={logoUrl} alt="Poochandi logo" width={40} height={40} sizes="40px" className="h-10 w-10 object-contain" loading="lazy" /> : null}
               <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                 <span className="text-2xl font-black tracking-wider text-gradient-magic">POOCHANDI.IN</span>
                 <span className="text-xs sm:text-sm font-bold tracking-wide text-teal-300">POOCHANDI VARRAAN</span>

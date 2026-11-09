@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { Inter } from "next/font/google";
 import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
 
 export const metadata: Metadata = {
   title: "Poochandi Official | Parenting Tips & Custom Child Requests",
@@ -13,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="antialiased bg-[#0b051b] text-slate-100">
+    <html lang="en" className={inter.variable}>
+      <body className={`${inter.className} antialiased bg-[#0b051b] text-slate-100`}>
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-37K1D73DXL"
           strategy="afterInteractive"

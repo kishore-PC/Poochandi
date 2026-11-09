@@ -6,6 +6,9 @@ import AdSenseSlot from '@/components/ads/AdSenseSlot';
 import ArticleCardGrid from '@/components/articles/ArticleCardGrid';
 import { BookOpen } from 'lucide-react';
 
+// ISR with hourly revalidation; requests using searchParams render dynamically per Next.js behavior.
+export const revalidate = 3600;
+
 interface ParentingGuidesPageProps { params: Promise<{ lang: string }>; searchParams: Promise<{ category?: string; q?: string }> }
 
 export async function generateMetadata({ params }: ParentingGuidesPageProps): Promise<Metadata> {

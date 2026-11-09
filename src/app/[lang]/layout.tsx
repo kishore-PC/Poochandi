@@ -6,9 +6,8 @@ import CookieConsentBanner from '@/components/layout/CookieConsentBanner';
 import { seedInitialData } from '@/lib/seed';
 import { queryAll } from '@/lib/db';
 
-// Database priming is handled per-request in server components/routes via initDb()/seedInitialData() where needed.
-
-export const dynamic = 'force-dynamic';
+// ISR-friendly: revalidate layout data (logo/settings seed) hourly. Avoid force-dynamic so public pages can use ISR.
+export const revalidate = 3600;
 
 export async function generateMetadata({
   params,
