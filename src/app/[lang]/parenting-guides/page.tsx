@@ -11,12 +11,19 @@ interface ParentingGuidesPageProps { params: Promise<{ lang: string }>; searchPa
 export async function generateMetadata({ params }: ParentingGuidesPageProps): Promise<Metadata> {
   const { lang: rawLang } = await params;
   const lang: Language = rawLang === 'ta' ? 'ta' : 'en';
+  const base = 'https://poochandi.in';
+  const canonical = `${base}/${lang}/parenting-guides`;
+  const title = 'Parenting Guides & Child Care Tips / பெற்றோர்களுக்கான வழிகாட்டி - Poochandi Varaan';
+  const description = lang === 'ta'
+    ? 'குழந்தை வளர்ப்பு, திரை நேரம், தூக்க பழக்கம், உணவு, தன்னம்பிக்கை மற்றும் ஒழுக்கம் குறித்த இருமொழி பெற்றோர் வழிகாட்டிகள் - Poochandi Varaan.'
+    : 'Bilingual parenting guides and child care tips: screen time, sleep, food habits, tantrums, confidence, focus, and gentle discipline by Poochandi Varaan.';
   return {
-    title: 'Parenting Guides & Child Care Tips / பெற்றோர்களுக்கான வழிகாட்டி',
-    description: lang === 'ta'
-      ? 'குழந்தை வளர்ப்பு, திரை நேரக் கட்டுப்பாடு, தூக்க பழக்கம், உணவு, தன்னம்பிக்கை மற்றும் ஒழுக்கம் குறித்த இருமொழி பெற்றோர் வழிகாட்டிகள்.'
-      : 'Bilingual parenting guides and child care tips for toddlers: screen time, sleep, food habits, tantrums, confidence, focus, and gentle discipline.',
-    alternates: { canonical: `https://poochandi.in/${lang}/parenting-guides` },
+    title,
+    description,
+    alternates: { canonical, languages: { en: `${base}/en/parenting-guides`, ta: `${base}/ta/parenting-guides`, 'x-default': `${base}/en/parenting-guides` } },
+    openGraph: { siteName: 'Poochandi Varaan', title, description, url: canonical, type: 'website', images: [{ url: `${base}/images/poochandi-logo.svg` }] },
+    twitter: { card: 'summary_large_image', title, description, images: [`${base}/images/poochandi-logo.svg`] },
+    robots: { index: true, follow: true },
   };
 }
 
