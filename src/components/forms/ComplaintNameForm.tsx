@@ -1,11 +1,38 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sparkles, Check, AlertCircle } from 'lucide-react';
+import { Check, AlertCircle } from 'lucide-react';
 
 interface ComplaintNameFormProps {
   lang: string;
+}
+
+function makeEntryId() {
+  return `PCH-LIST-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+}
+
+async function postComplaint(payload: { childName: string; childAge: number; entryId: string }, retries = 2) {
+  let lastErr: any;
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const res = await fetch('/api/complaint-names', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        keepalive: true,
+      });
+      if (res.ok) return { ok: true as const };
+      const data = await res.json().catch(() => ({}));
+      lastErr = data?.error || `HTTP ${res.status}`;
+      // don't retry obvious validation errors
+      if (res.status >= 400 && res.status < 500 && res.status !== 408 && res.status !== 429) return { ok: false as const, error: lastErr };
+    } catch (e: any) {
+      lastErr = e?.message || 'Network error';
+    }
+    if (i < retries) await new Promise((r) => setTimeout(r, 250 * (i + 1)));
+  }
+  return { ok: false as const, error: lastErr };
 }
 
 export default function ComplaintNameForm({ lang }: ComplaintNameFormProps) {
@@ -15,11 +42,13 @@ export default function ComplaintNameForm({ lang }: ComplaintNameFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setErrorMessage('');
 
-    if (!childName.trim()) {
+    const trimmedName = childName.trim();
+    if (!trimmedName) {
       setErrorMessage(lang === 'ta' ? 'குழந்தையின் பெயரைப் பதிவு செய்யவும்.' : "Child's name cannot be empty.");
       return;
     }
@@ -31,38 +60,32 @@ export default function ComplaintNameForm({ lang }: ComplaintNameFormProps) {
     }
 
     setIsSubmitting(true);
+    const entryId = makeEntryId();
+    const payload = { childName: trimmedName, childAge: ageNum, entryId };
 
+    // Optimistic UI: navigate instantly; persist in background (keepalive + retry)
     try {
-      const res = await fetch('/api/complaint-names', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          childName: childName.trim(),
-          childAge: ageNum,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setErrorMessage(data.error || (lang === 'ta' ? 'பதிவு செய்வதில் பிழை ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்.' : 'Storage failed. Please try again.'));
-        setIsSubmitting(false);
-        return;
-      }
-
-      // ONLY redirect upon verified database storage
-      // Use sessionStorage so the success page cannot leak sensitive info in public URLs
       sessionStorage.setItem('pch_success_data', JSON.stringify({
-        entryId: data.entryId,
-        childName: data.childName,
-        childAge: data.childAge,
+        entryId,
+        childName: trimmedName,
+        childAge: ageNum,
+        pending: true,
       }));
+    } catch {}
 
-      router.push(`/${lang}/complaint-name-list/success`);
-    } catch (err) {
-      setErrorMessage(lang === 'ta' ? 'இணைய தொடர்பு பிழை. உங்கள் விவரங்கள் அழியவில்லை, மீண்டும் முயற்சிக்கவும்.' : 'Network error. Your entered details were retained, please retry.');
-      setIsSubmitting(false);
-    }
-  };
+    // Fire-and-forget background save (non-blocking navigation)
+    void postComplaint(payload).then((result) => {
+      try {
+        if (result.ok) {
+          sessionStorage.setItem('pch_success_data', JSON.stringify({ entryId, childName: trimmedName, childAge: ageNum, pending: false }));
+        } else {
+          sessionStorage.setItem('pch_success_data', JSON.stringify({ entryId, childName: trimmedName, childAge: ageNum, pending: true, saveError: result.error || 'save_failed' }));
+        }
+      } catch {}
+    });
+
+    router.push(`/${lang}/complaint-name-list/success`);
+  }, [childAge, childName, isSubmitting, lang, router]);
 
   return (
     <div className="w-full max-w-lg mx-auto">
@@ -83,7 +106,6 @@ export default function ComplaintNameForm({ lang }: ComplaintNameFormProps) {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Child's Name */}
         <div>
           <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-2">
             {lang === 'ta' ? 'குழந்தையின் பெயர்' : "Child's Name"} <span className="text-orange-400">*</span>
@@ -98,7 +120,6 @@ export default function ComplaintNameForm({ lang }: ComplaintNameFormProps) {
           />
         </div>
 
-        {/* Child's Age */}
         <div>
           <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-2">
             {lang === 'ta' ? 'குழந்தையின் வயது' : "Child's Age"} <span className="text-orange-400">*</span>
@@ -115,15 +136,14 @@ export default function ComplaintNameForm({ lang }: ComplaintNameFormProps) {
           />
         </div>
 
-        {/* CONFIRM BUTTON (Prevent duplicate clicks) */}
         <div className="pt-2">
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-slate-950 font-black text-base shadow-xl shadow-orange-500/25 transition-all hover:scale-[1.01] active:scale-95 duration-150 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-slate-950 font-black text-base shadow-xl shadow-orange-500/25 transition-all hover:scale-[1.01] active:scale-95 duration-100 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
           >
             <Check className="w-5 h-5 text-slate-950 stroke-[3]" />
-            <span>{isSubmitting ? (lang === 'ta' ? 'பதிவாகிறது...' : 'Confirming...') : (lang === 'ta' ? 'உறுதி செய்க (CONFIRM)' : 'CONFIRM')}</span>
+            <span>{isSubmitting ? (lang === 'ta' ? 'சமர்ப்பிக்கிறது...' : 'Submitting...') : (lang === 'ta' ? 'உறுதி செய்க (CONFIRM)' : 'CONFIRM & SUBMIT')}</span>
           </button>
         </div>
       </form>
