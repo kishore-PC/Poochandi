@@ -304,129 +304,116 @@ export default function GoodChildCertificate({ lang }: Props) {
 
   const reset = () => { setCert(null); setError(''); setStatusErr(''); setStatusMsg(''); setChildName(''); setAge(''); setFatherName(''); setMotherName(''); setCity(''); removePhoto(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
-  const nameFs = cert ? clampFontSize(cert.childName, 74, 30, 18) : 74;
+  const nameFs = cert ? clampFontSize(cert.childName, 72, 28, 18) : 72;
 
-  // Percentage-based positioning (relative to 1536x1024 template)
+  // Percentage-based positioning (relative to 1536x1024 template) - aligned to template's drawn areas
   const pos = {
-    nameCover: { left: pct(320, W), top: pct(314, H), width: pct(896, W), height: pct(124, H) },
-    ribbonCover: { left: pct(568, W), top: pct(450, H), width: pct(400, W), height: pct(60, H) },
-    leftCover: { left: pct(165, W), top: pct(575, H), width: pct(520, W), height: pct(170, H) },
-    rightCover: { left: pct(855, W), top: pct(575, H), width: pct(510, W), height: pct(170, H) },
-    bottomLCover: { left: pct(45, W), top: pct(900, H), width: pct(430, W), height: pct(92, H) },
-    bottomRCover: { left: pct(1060, W), top: pct(900, H), width: pct(430, W), height: pct(92, H) },
-    photo: { left: pct(1118, W), top: pct(92, H), width: pct(246, W), height: pct(246, H) },
-    name: { left: pct(320, W), top: pct(312, H), width: pct(896, W), height: pct(130, H) },
-    ribbon: { left: pct(560, W), top: pct(448, H), width: pct(416, W), height: pct(64, H) },
-    leftPanel: { left: pct(190, W), top: pct(584, H), width: pct(480, W), height: pct(152, H) },
-    rightPanel: { left: pct(878, W), top: pct(584, H), width: pct(468, W), height: pct(152, H) },
-    brandL: { left: pct(70, W), top: pct(912, H), width: pct(380, W), height: pct(66, H) },
-    brandR: { left: pct(1085, W), top: pct(912, H), width: pct(380, W), height: pct(66, H) },
+    photo: { left: pct(1118, W), top: pct(90, H), width: pct(248, W), height: pct(248, H) },
+    name: { left: pct(210, W), top: pct(360, H), width: pct(900, W), height: pct(96, H) },
+    ribbon: { left: pct(590, W), top: pct(454, H), width: pct(356, W), height: pct(44, H) },
+    leftPanel: { left: pct(215, W), top: pct(585, H), width: pct(420, W), height: pct(126, H) },
+    rightPanel: { left: pct(900, W), top: pct(585, H), width: pct(430, W), height: pct(126, H) },
+    brandL: { left: pct(70, W), top: pct(918, H), width: pct(360, W), height: pct(52, H) },
+    brandR: { left: pct(1105, W), top: pct(918, H), width: pct(360, W), height: pct(52, H) },
   } as const;
 
-  const labelStyle: React.CSSProperties = { fontSize: 'clamp(14px, 1.56vw, 24px)', fontWeight: 700, color: '#7c2d12', whiteSpace: 'nowrap', flexShrink: 0 };
-  const valueStyle: React.CSSProperties = { fontSize: 'clamp(15px, 1.7vw, 26px)', fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, lineHeight: 1.15 };
-  const rowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '0.6em', minWidth: 0, height: '100%' };
+  const transparentBase: React.CSSProperties = { background: 'transparent', border: 'none', boxShadow: 'none' };
+  const labelStyle: React.CSSProperties = { ...transparentBase, fontSize: 'clamp(10px, 1.2vw, 14px)', fontWeight: 700, color: '#7c2d12', whiteSpace: 'nowrap', flexShrink: 0, lineHeight: 1.1 };
+  const valueStyle: React.CSSProperties = { ...transparentBase, fontSize: 'clamp(10px, 1.2vw, 14px)', fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, lineHeight: 1.1, maxWidth: '100%' };
+  const rowStyle: React.CSSProperties = { ...transparentBase, display: 'flex', alignItems: 'center', gap: '0.45em', minWidth: 0, height: '100%', overflow: 'hidden' };
 
   const CertificateVisual = ({ id, nodeRef }: { id: string; nodeRef?: React.Ref<HTMLDivElement> }) => (
     <div
       id={id}
       ref={nodeRef}
       className={notoTamil.className}
-      style={{ position: 'relative', width: W, height: H, aspectRatio: AR, overflow: 'hidden', background: '#fff', fontFamily: 'var(--font-noto-sans-tamil), "Noto Sans Tamil", Arial, sans-serif' }}
+      style={{ position: 'relative', width: W, height: H, aspectRatio: AR, overflow: 'hidden', background: 'transparent', fontFamily: 'var(--font-noto-sans-tamil), "Noto Sans Tamil", Arial, sans-serif' }}
     >
       <img
         src="/images/poochandi-certificate-template.png"
         alt="Certificate background"
         crossOrigin="anonymous"
         draggable={false}
-        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }}
       />
 
-      {/* Covers to hide baked template placeholders/tokens (colors sampled to blend) */}
-      <div style={{ position: 'absolute', ...pos.nameCover, background: 'rgba(231,204,174,0.995)', borderRadius: '1.2%' }} />
-      <div style={{ position: 'absolute', ...pos.ribbonCover, background: 'rgba(231,199,194,0.995)', borderRadius: '0.9%' }} />
-      <div style={{ position: 'absolute', ...pos.leftCover, background: 'rgba(192,162,138,0.995)', borderRadius: '1%' }} />
-      <div style={{ position: 'absolute', ...pos.rightCover, background: 'rgba(236,209,182,0.995)', borderRadius: '1%' }} />
-      <div style={{ position: 'absolute', ...pos.bottomLCover, background: 'rgba(190,133,89,0.995)', borderRadius: '1.2%' }} />
-      <div style={{ position: 'absolute', ...pos.bottomRCover, background: 'rgba(210,184,136,0.995)', borderRadius: '1.2%' }} />
+      {/* Single absolute overlay container for all dynamic elements */}
+      <div style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1, background: 'transparent' }}>
+        {/* Photo (inside golden frame, top-right) */}
+        <div style={{ position: 'absolute', ...pos.photo, borderRadius: '50%', overflow: 'hidden', background: 'transparent', border: 'none', boxShadow: 'none' }}>
+          {cert?.photoDataUrl ? (
+            <img
+              src={cert.photoDataUrl}
+              alt={cert.childName || 'Child photo'}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', borderRadius: '50%', display: 'block', background: 'transparent' }}
+            />
+          ) : null}
+        </div>
 
-      {/* Photo (upper-right frame) */}
-      <div style={{ position: 'absolute', ...pos.photo, borderRadius: '50%', overflow: 'hidden', border: `${Math.max(4, Math.round(W * 0.0045))}px solid rgba(214,178,70,0.98)`, boxShadow: '0 8px 18px rgba(0,0,0,0.18)', background: 'linear-gradient(180deg,#fff7e6,#ffe8bf)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {cert?.photoDataUrl ? (
-          <img src={cert.photoDataUrl} alt={cert.childName || 'Child photo'} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', borderRadius: '12px' }} />
-        ) : (
-          <div style={{ textAlign: 'center', color: '#92400e', padding: '6%' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '4%' }}><Camera size={44} color="#b45309" /></div>
-            <div style={{ fontSize: 'clamp(12px, 1.3vw, 20px)', fontWeight: 700, lineHeight: 1.2 }}>{isTa ? 'குழந்தை புகைப்படம்' : 'Child Photo'}</div>
+        {/* Child Name (centered in banner area below "This certificate is proudly presented to") */}
+        <div style={{ position: 'absolute', ...pos.name, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', background: 'transparent', border: 'none', boxShadow: 'none', padding: `0 ${pct(10, W)}` }}>
+          <div
+            style={{
+              ...transparentBase,
+              width: '100%',
+              color: '#7c2d12',
+              fontWeight: 800,
+              fontSize: `clamp(28px, ${(nameFs / W) * 100}vw, ${nameFs}px)`,
+              lineHeight: 1.05,
+              letterSpacing: 0.2,
+              wordBreak: 'break-word',
+              overflowWrap: 'anywhere',
+              textAlign: 'center',
+            }}
+          >
+            {cert?.childName || ''}
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Child Name (center-aligned, bold, dynamic sizing) */}
-      <div style={{ position: 'absolute', ...pos.name, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: `0 ${pct(24, W)}` }}>
-        <div
-          style={{
-            width: '100%',
-            color: '#7c2d12',
-            fontWeight: 800,
-            fontSize: `clamp(30px, ${(nameFs / W) * 100}vw, ${nameFs}px)`,
-            lineHeight: 1.06,
-            letterSpacing: 0.2,
-            wordBreak: 'break-word',
-            overflowWrap: 'anywhere',
-            textAlign: 'center',
-          }}
-        >
-          {cert?.childName || ''}
+        {/* Month & Year (inside red ribbon) */}
+        <div style={{ position: 'absolute', ...pos.ribbon, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', background: 'transparent', border: 'none', boxShadow: 'none' }}>
+          <div style={{ ...transparentBase, color: '#fff7ed', fontWeight: 800, fontSize: 'clamp(14px, 1.9vw, 30px)', lineHeight: 1.1, textShadow: '0 1px 1px rgba(0,0,0,0.15)' }}>{cert?.monthYear || ''}</div>
         </div>
-      </div>
 
-      {/* Month & Year */}
-      <div style={{ position: 'absolute', ...pos.ribbon, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: `0 ${pct(12, W)}` }}>
-        <div style={{ color: '#9d174d', fontWeight: 800, fontSize: 'clamp(18px, 2.35vw, 36px)', lineHeight: 1.1 }}>{cert?.monthYear || ''}</div>
-      </div>
+        {/* Bottom-left details (transparent over template labels/lines) */}
+        <div style={{ position: 'absolute', ...pos.leftPanel, display: 'grid', gridTemplateRows: '1fr 1fr 1fr', alignItems: 'center', rowGap: '4%', background: 'transparent', border: 'none', boxShadow: 'none' }}>
+          <div style={rowStyle}>
+            <span style={labelStyle}>{isTa ? 'வயது' : 'Age'}:</span>
+            <span style={valueStyle}>{cert?.age || ''}</span>
+          </div>
+          <div style={{ ...rowStyle, visibility: cert?.fatherName ? 'visible' : 'hidden' }}>
+            <span style={labelStyle}>{isTa ? 'தந்தை பெயர்' : "Father's Name"}:</span>
+            <span style={valueStyle}>{cert?.fatherName || ''}</span>
+          </div>
+          <div style={{ ...rowStyle, visibility: cert?.motherName ? 'visible' : 'hidden' }}>
+            <span style={labelStyle}>{isTa ? 'தாய் பெயர்' : "Mother's Name"}:</span>
+            <span style={valueStyle}>{cert?.motherName || ''}</span>
+          </div>
+        </div>
 
-      {/* Left details: Age, Father's Name, Mother's Name */}
-      <div style={{ position: 'absolute', ...pos.leftPanel, display: 'grid', gridTemplateRows: '1fr 1fr 1fr', alignItems: 'center', rowGap: '2%' }}>
-        <div style={rowStyle}>
-          <span style={labelStyle}>{isTa ? 'வயது' : 'Age'}:</span>
-          <span style={{ ...valueStyle, fontSize: 'clamp(16px, 1.82vw, 28px)' }}>{cert?.age || ''}</span>
+        {/* Bottom-right details (transparent over template icons/labels) */}
+        <div style={{ position: 'absolute', ...pos.rightPanel, display: 'grid', gridTemplateRows: '1fr 1fr 1fr', alignItems: 'center', rowGap: '4%', background: 'transparent', border: 'none', boxShadow: 'none' }}>
+          <div style={{ ...rowStyle, visibility: cert?.city ? 'visible' : 'hidden' }}>
+            <span style={labelStyle}>{isTa ? 'நகரம் / ஊர்' : 'City / Town'}:</span>
+            <span style={valueStyle}>{cert?.city || ''}</span>
+          </div>
+          <div style={rowStyle}>
+            <span style={labelStyle}>{isTa ? 'வழங்கிய தேதி' : 'Issued On'}:</span>
+            <span style={valueStyle}>{cert?.issueDate || ''}</span>
+          </div>
+          <div style={rowStyle}>
+            <span style={labelStyle}>{isTa ? 'சான்றிதழ் எண்' : 'Certificate ID'}:</span>
+            <span style={{ ...valueStyle, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' }}>{cert?.certId || ''}</span>
+          </div>
         </div>
-        <div style={{ ...rowStyle, visibility: cert?.fatherName ? 'visible' : 'hidden' }}>
-          <span style={labelStyle}>{isTa ? 'தந்தை பெயர்' : "Father's Name"}:</span>
-          <span style={valueStyle}>{cert?.fatherName || ''}</span>
-        </div>
-        <div style={{ ...rowStyle, visibility: cert?.motherName ? 'visible' : 'hidden' }}>
-          <span style={labelStyle}>{isTa ? 'தாய் பெயர்' : "Mother's Name"}:</span>
-          <span style={valueStyle}>{cert?.motherName || ''}</span>
-        </div>
-      </div>
 
-      {/* Right details: City/Town, Issued On, Certificate ID */}
-      <div style={{ position: 'absolute', ...pos.rightPanel, display: 'grid', gridTemplateRows: '1fr 1fr 1fr', alignItems: 'center', rowGap: '2%' }}>
-        <div style={{ ...rowStyle, visibility: cert?.city ? 'visible' : 'hidden' }}>
-          <span style={labelStyle}>{isTa ? 'நகரம் / ஊர்' : 'City / Town'}:</span>
-          <span style={valueStyle}>{cert?.city || ''}</span>
+        {/* Bottom branding (transparent, aligned to template footer areas) */}
+        <div style={{ position: 'absolute', ...pos.brandL, display: 'flex', alignItems: 'center', gap: '3%', color: '#fff7ed', background: 'transparent', border: 'none', boxShadow: 'none' }}>
+          <span style={{ ...transparentBase, fontSize: 'clamp(12px, 1.5vw, 22px)', fontWeight: 700, lineHeight: 1 }}>@poochandi.in</span>
         </div>
-        <div style={rowStyle}>
-          <span style={labelStyle}>{isTa ? 'வழங்கிய தேதி' : 'Issued On'}:</span>
-          <span style={valueStyle}>{cert?.issueDate || ''}</span>
+        <div style={{ position: 'absolute', ...pos.brandR, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', color: '#ecfccb', background: 'transparent', border: 'none', boxShadow: 'none' }}>
+          <span style={{ ...transparentBase, fontSize: 'clamp(12px, 1.6vw, 24px)', fontWeight: 800, lineHeight: 1, textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}>Poochandi Varran</span>
         </div>
-        <div style={rowStyle}>
-          <span style={labelStyle}>{isTa ? 'சான்றிதழ் எண்' : 'Certificate ID'}:</span>
-          <span style={{ ...valueStyle, fontSize: 'clamp(14px, 1.56vw, 24px)', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' }}>{cert?.certId || ''}</span>
-        </div>
-      </div>
-
-      {/* Bottom branding */}
-      <div style={{ position: 'absolute', ...pos.brandL, display: 'flex', alignItems: 'center', gap: '3%', color: '#fff7ed' }}>
-        <div style={{ width: pct(36, 380), height: '54%', minWidth: 28, minHeight: 28, borderRadius: '28%', background: 'linear-gradient(135deg,#f58529,#dd2a7b,#8134af,#515bd4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }}>
-          <Camera size={18} color="#fff" />
-        </div>
-        <span style={{ fontSize: 'clamp(14px, 1.7vw, 26px)', fontWeight: 700, letterSpacing: 0.2, lineHeight: 1 }}>@poochandi.in</span>
-      </div>
-      <div style={{ position: 'absolute', ...pos.brandR, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', color: '#ecfccb', paddingRight: '1.5%' }}>
-        <span style={{ fontSize: 'clamp(16px, 1.95vw, 30px)', fontWeight: 800, lineHeight: 1, textShadow: '0 1px 2px rgba(0,0,0,0.25)' }}>Poochandi Varran</span>
       </div>
     </div>
   );
