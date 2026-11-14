@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Language, dictionaries } from '@/lib/i18n';
 import { initDb, queryAll } from '@/lib/db';
 import AdSenseSlot from '@/components/ads/AdSenseSlot';
+import InstagramDmButton from '@/components/home/InstagramDmButton';
 import { Sparkles, Send, BookOpen, Heart, Star, ShieldCheck, Play } from 'lucide-react';
 import { InstagramIcon } from '@/components/icons/SocialIcons';
 
@@ -58,10 +59,7 @@ export default async function HomePage({ params }: HomePageProps) {
                     <p className="text-sm sm:text-[15px] font-semibold text-teal-200 leading-snug">For Your Children &mdash; With Picture &amp; Name</p>
                     <p className="inline-flex text-[11px] sm:text-xs font-bold tracking-widest text-amber-300 bg-amber-500/10 border border-amber-400/30 px-2.5 py-0.5 rounded-md">(PAID)</p>
                   </div>
-                  <a href="https://ig.me/m/poochandi.in" target="_blank" rel="noopener noreferrer" className="w-full py-3.5 sm:py-4 px-6 rounded-xl bg-gradient-to-r from-[#f58529] via-[#dd2a7b] to-[#8134af] hover:brightness-110 text-white font-black text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-lg shadow-pink-600/30 transition-all hover:scale-[1.01] active:scale-95 duration-150">
-                    <InstagramIcon className="w-5 h-5" />
-                    <span>DM US ON INSTAGRAM</span>
-                  </a>
+                  <InstagramDmButton />
                 </div>
               </div>
               <div className="pt-4 flex items-center justify-center lg:justify-start gap-6 text-xs text-slate-400">

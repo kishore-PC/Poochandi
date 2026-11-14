@@ -3,10 +3,15 @@
 import React, { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check, AlertCircle } from 'lucide-react';
+import AdSenseSlot from '@/components/ads/AdSenseSlot';
 
 interface ComplaintNameFormProps {
   lang: string;
 }
+
+const NAME_MAX = 13;
+const NAME_VALID_RE = /^[\p{L} ]+$/u;
+const NAME_ERROR = 'Maximum 13 characters. Commas, full stops and special characters are not allowed.';
 
 function makeEntryId() {
   return `PCH-LIST-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
@@ -50,6 +55,10 @@ export default function ComplaintNameForm({ lang }: ComplaintNameFormProps) {
     const trimmedName = childName.trim();
     if (!trimmedName) {
       setErrorMessage(lang === 'ta' ? 'குழந்தையின் பெயரைப் பதிவு செய்யவும்.' : "Child's name cannot be empty.");
+      return;
+    }
+    if (trimmedName.length > NAME_MAX || !NAME_VALID_RE.test(trimmedName)) {
+      setErrorMessage(NAME_ERROR);
       return;
     }
 
@@ -113,11 +122,20 @@ export default function ComplaintNameForm({ lang }: ComplaintNameFormProps) {
           <input
             type="text"
             required
+            maxLength={NAME_MAX}
             value={childName}
-            onChange={(e) => setChildName(e.target.value)}
-            placeholder={lang === 'ta' ? 'எ.கா: ஆரவ் / அனன்யா' : "e.g. Aarav / Diya"}
+            onChange={(e) => {
+              const raw = e.target.value.replace(/[^\p{L} ]/gu, '').slice(0, NAME_MAX);
+              setChildName(raw.replace(/^\s+/, ''));
+            }}
+            placeholder="e.g. Kishore"
             className="w-full px-4 py-3.5 rounded-xl bg-[#140b2e] border border-purple-800/60 text-white placeholder-slate-500 focus:outline-none focus:border-teal-400 text-sm transition-all"
           />
+          <div className="mt-2 text-[11px] leading-snug text-slate-400 space-y-0.5">
+            <p>{lang === 'ta' ? 'ஒரு பதிவுக்கு ஒரு பெயர் மட்டும்.' : 'Only one name per entry.'}</p>
+            <p>{lang === 'ta' ? 'மற்றொரு பெயரை சேர்க்க வேண்டுமா?' : 'Want to add another one name?'}</p>
+            <p>{lang === 'ta' ? 'அடுத்த பக்கத்தில் சேர்க்கலாம்.' : 'You can add it on the next page.'}</p>
+          </div>
         </div>
 
         <div>
@@ -147,6 +165,10 @@ export default function ComplaintNameForm({ lang }: ComplaintNameFormProps) {
           </button>
         </div>
       </form>
+
+      <div className="mt-8 pt-2">
+        <AdSenseSlot slotId="complaint-name-list-below-confirm-ad" />
+      </div>
     </div>
   );
 }
