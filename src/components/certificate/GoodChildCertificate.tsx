@@ -350,18 +350,18 @@ export default function GoodChildCertificate({ lang }: Props) {
       <img src="/images/poochandi-certificate-template.png" alt="Certificate background" crossOrigin="anonymous" draggable={false} width={W} height={H} style={{ position: 'absolute', inset: 0, width: W, height: H, objectFit: 'fill' }} />
 
       {/* Targeted covers to hide baked placeholder tokens/values in the template while preserving artwork.
-          Kept aligned to dynamic field containers to avoid stray rectangles. */}
+          Colors sampled from template regions to blend with artwork and avoid obvious rectangles. */}
       {/* Name area */}
-      <div style={{ position: 'absolute', left: 320, top: 318, width: 896, height: 118, background: 'linear-gradient(180deg, rgba(255,248,242,0.99), rgba(255,244,236,0.99))', borderRadius: 18 }} />
+      <div style={{ position: 'absolute', left: 320, top: 314, width: 896, height: 124, background: 'rgba(231,204,174,0.995)', borderRadius: 18 }} />
       {/* Month ribbon */}
-      <div style={{ position: 'absolute', left: 575, top: 452, width: 386, height: 56, background: 'rgba(255,250,246,0.99)', borderRadius: 14 }} />
+      <div style={{ position: 'absolute', left: 568, top: 450, width: 400, height: 60, background: 'rgba(231,199,194,0.995)', borderRadius: 14 }} />
       {/* Left info panel */}
-      <div style={{ position: 'absolute', left: 165, top: 575, width: 520, height: 170, background: 'linear-gradient(180deg, rgba(250,238,220,0.99), rgba(246,231,208,0.99))', borderRadius: 16 }} />
+      <div style={{ position: 'absolute', left: 165, top: 575, width: 520, height: 170, background: 'rgba(192,162,138,0.995)', borderRadius: 16 }} />
       {/* Right info panel */}
-      <div style={{ position: 'absolute', left: 855, top: 575, width: 510, height: 170, background: 'linear-gradient(180deg, rgba(250,238,220,0.99), rgba(246,231,208,0.99))', borderRadius: 16 }} />
-      {/* Bottom branding/date/id strips (hide baked placeholders/AI tag, keep artwork context) */}
-      <div style={{ position: 'absolute', left: 45, top: 900, width: 430, height: 92, background: 'linear-gradient(90deg, rgba(82,46,18,0.985), rgba(98,56,22,0.97))', borderRadius: 18 }} />
-      <div style={{ position: 'absolute', left: 1060, top: 900, width: 430, height: 92, background: 'linear-gradient(270deg, rgba(48,62,18,0.985), rgba(62,74,22,0.97))', borderRadius: 18 }} />
+      <div style={{ position: 'absolute', left: 855, top: 575, width: 510, height: 170, background: 'rgba(236,209,182,0.995)', borderRadius: 16 }} />
+      {/* Bottom branding/date/id strips (hide baked placeholders/AI tag) */}
+      <div style={{ position: 'absolute', left: 45, top: 900, width: 430, height: 92, background: 'rgba(190,133,89,0.995)', borderRadius: 18 }} />
+      <div style={{ position: 'absolute', left: 1060, top: 900, width: 430, height: 92, background: 'rgba(210,184,136,0.995)', borderRadius: 18 }} />
 
       {/* Photo frame (upper-right, aligned to decorative frame area) */}
       <div style={{ position: 'absolute', left: 1118, top: 92, width: 246, height: 246, borderRadius: '50%', overflow: 'hidden', border: '7px solid rgba(214,178,70,0.98)', boxShadow: '0 8px 18px rgba(0,0,0,0.18)', background: 'linear-gradient(180deg,#fff7e6,#ffe8bf)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
