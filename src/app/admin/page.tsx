@@ -46,6 +46,8 @@ export default function AdminDashboardPage() {
   const [selectedRandomNames, setSelectedRandomNames] = useState<string[]>([]);
   const [copyStatus, setCopyStatus] = useState('');
   const [copyError, setCopyError] = useState('');
+  const [isEditingNames, setIsEditingNames] = useState(false);
+  const [editNamesText, setEditNamesText] = useState('');
 
   // Articles CMS state
   const [articles, setArticles] = useState<any[]>([]);
@@ -156,6 +158,8 @@ export default function AdminDashboardPage() {
   const openToCopyModal = async () => {
     setShowToCopyModal(true);
     setSelectedRandomNames([]);
+    setIsEditingNames(false);
+    setEditNamesText('');
     setCopyStatus('');
     setCopyError('');
     setRandomCountInput('');
@@ -214,10 +218,15 @@ export default function AdminDashboardPage() {
       setCopyError(`Requested count cannot exceed available entries (${total}).`);
       return;
     }
-    setSelectedRandomNames(pickRandomNames(count));
+    const picked = pickRandomNames(count);
+    setSelectedRandomNames(picked);
+    setIsEditingNames(false);
+    setEditNamesText(formatNamesForCopy(picked));
   };
 
-  const formatNamesForCopy = (names: string[]) => names.map((n) => String(n ?? '').trim()).filter(Boolean).join('\n');
+  const sanitizeCopyName = (name: string) => String(name ?? '').replace(/[^\p{L} ]/gu, '').slice(0, 13).trim();
+  const formatNamesForCopy = (names: string[]) => names.map((n) => sanitizeCopyName(n)).filter(Boolean).join('\n');
+  const parseEditedNames = (text: string) => text.split('\n').map((line) => sanitizeCopyName(line)).filter(Boolean);
 
   const handleCopyAllNames = async () => {
     const text = formatNamesForCopy(selectedRandomNames);
@@ -238,13 +247,48 @@ export default function AdminDashboardPage() {
     const raw = randomCountInput.trim();
     const count = /^\d+$/.test(raw) ? Number(raw) : 0;
     if (count >= 1 && count <= total && total > 0) {
-      setSelectedRandomNames(pickRandomNames(count));
+      const picked = pickRandomNames(count);
+      setSelectedRandomNames(picked);
+      setIsEditingNames(false);
+      setEditNamesText(formatNamesForCopy(picked));
       setCopyStatus('');
       setCopyError('');
     } else {
       setSelectedRandomNames([]);
+      setIsEditingNames(false);
+      setEditNamesText('');
       setCopyError('Enter a valid count, then click COPY RANDOMLY or Select Again.');
     }
+  };
+
+  const handleToggleEditNames = () => {
+    if (selectedRandomNames.length === 0) return;
+    setIsEditingNames((v) => {
+      const next = !v;
+      if (next) setEditNamesText(formatNamesForCopy(selectedRandomNames));
+      return next;
+    });
+    setCopyStatus('');
+    setCopyError('');
+  };
+
+  const handleEditNamesChange = (value: string) => {
+    // Preserve line breaks while sanitizing each name (max 13 chars, letters/spaces only)
+    const sanitized = value
+      .split('\n')
+      .map((line) => String(line).replace(/[^\p{L} ]/gu, '').replace(/^\s+/, '').slice(0, 13))
+      .join('\n');
+    setEditNamesText(sanitized);
+    setSelectedRandomNames(parseEditedNames(sanitized));
+  };
+
+  const handleClearCopiedNames = () => {
+    if (!confirm('Clear all selected names from this copy session? This will not delete any database entries.')) return;
+    setSelectedRandomNames([]);
+    setIsEditingNames(false);
+    setEditNamesText('');
+    setCopyStatus('');
+    setCopyError('');
   };
 
   // File Upload Handlers (Avatar & Logo)
@@ -1083,32 +1127,56 @@ export default function AdminDashboardPage() {
 
                     {selectedRandomNames.length > 0 && (
                       <div className="mt-5 p-4 rounded-2xl bg-[#0d0522] border border-teal-700/30 space-y-3">
-                        <h4 className="text-sm font-black text-teal-300">Your Selected Names â€” Ready to Copy</h4>
+                        <div className="flex items-center justify-between gap-2">
+                          <h4 className="text-sm font-black text-teal-300">Your Selected Names — Ready to Copy</h4>
+                          {isEditingNames && <span className="text-[10px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded">Editing</span>}
+                        </div>
                         <textarea
-                          readOnly
-                          value={selectedRandomNames.map((n) => String(n ?? '').trim()).filter(Boolean).join('\n')}
-                          className="w-full min-h-[180px] px-3 py-3 rounded-xl bg-[#140b2e] border border-purple-800 text-white text-sm leading-6 whitespace-pre-line resize-y"
+                          readOnly={!isEditingNames}
+                          value={isEditingNames ? editNamesText : formatNamesForCopy(selectedRandomNames)}
+                          onChange={(e) => handleEditNamesChange(e.target.value)}
+                          className={`w-full min-h-[180px] px-3 py-3 rounded-xl border text-white text-sm leading-6 whitespace-pre-line resize-y ${isEditingNames ? 'bg-[#140b2e] border-amber-500/60 focus:outline-none focus:border-amber-400' : 'bg-[#140b2e] border-purple-800'}`}
                           aria-label="Selected names"
                         />
-                        <p className="text-[11px] text-slate-500">Names only, one per line. No serial numbers, ages, dates, or IDs.</p>
+                        <p className="text-[11px] text-slate-500">
+                          {isEditingNames
+                            ? 'Edit names (one per line). Max 13 characters each; letters and spaces only. No serial numbers or ages. Edits apply only to this copy session.'
+                            : 'Names only, one per line. No serial numbers, ages, dates, or IDs.'}
+                        </p>
                         {copyStatus && (
                           <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-semibold">
                             {copyStatus}
                           </div>
                         )}
-                        <div className="flex flex-col sm:flex-row gap-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={handleToggleEditNames}
+                            className={`inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-3 rounded-xl font-bold text-sm cursor-pointer border ${isEditingNames ? 'bg-amber-500 text-slate-950 border-amber-400' : 'bg-purple-900/60 hover:bg-purple-800/60 border-purple-700/50 text-purple-100'}`}
+                          >
+                            <Pencil className="w-4 h-4" />
+                            {isEditingNames ? 'DONE EDITING' : 'EDIT NAMES'}
+                          </button>
                           <button
                             type="button"
                             onClick={handleCopyAllNames}
-                            className="flex-1 inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-950 font-black text-sm cursor-pointer"
+                            className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-950 font-black text-sm cursor-pointer"
                           >
                             <Copy className="w-4 h-4" />
                             COPY ALL NAMES
                           </button>
                           <button
                             type="button"
+                            onClick={handleClearCopiedNames}
+                            className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-3 rounded-xl bg-red-950/60 hover:bg-red-900/60 border border-red-800/50 text-red-200 font-bold text-sm cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            CLEAR COPIED NAMES
+                          </button>
+                          <button
+                            type="button"
                             onClick={handleSelectAgain}
-                            className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-3 rounded-xl bg-purple-900/60 hover:bg-purple-800/60 border border-purple-700/50 text-purple-100 font-bold text-sm cursor-pointer"
+                            className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-3 rounded-xl bg-purple-900/60 hover:bg-purple-800/60 border border-purple-700/50 text-purple-100 font-bold text-sm cursor-pointer"
                           >
                             <RefreshCw className="w-4 h-4" />
                             Select Again
