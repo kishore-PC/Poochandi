@@ -69,6 +69,7 @@ export default function GoodChildCertificate({ lang }: Props) {
   const [error, setError] = useState('');
   const [cert, setCert] = useState<CertData | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState('');
 
   const t = isTa
     ? {
@@ -107,6 +108,7 @@ export default function GoodChildCertificate({ lang }: Props) {
   const onGenerate = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setDownloadError('');
     const cName = clean(childName, 40);
     const cAge = clean(age, 10);
     const fName = clean(fatherName, 40);
@@ -134,32 +136,123 @@ export default function GoodChildCertificate({ lang }: Props) {
   };
 
   const onDownload = async () => {
-    if (!cert || !certRef.current) return;
+    if (!cert || !certRef.current || downloading) return;
+    setDownloadError('');
     setDownloading(true);
+    let step = 'init';
     try {
+      step = 'load-libs';
       const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import('html2canvas'), import('jspdf')]);
+
+      step = 'wait-fonts';
       // @ts-ignore
       if (document.fonts?.ready) await document.fonts.ready;
-      await new Promise((r) => setTimeout(r, 150));
+
+      step = 'wait-images';
+      const imgs = Array.from(certRef.current.querySelectorAll('img')) as HTMLImageElement[];
+      await Promise.all(
+        imgs.map(async (img) => {
+          try {
+            if (img.decode) await img.decode();
+          } catch {}
+          if (!img.complete) {
+            await new Promise<void>((resolve) => {
+              img.onload = () => resolve();
+              img.onerror = () => resolve();
+            });
+          }
+        })
+      );
+      await new Promise((r) => setTimeout(r, 100));
+
+      step = 'render-canvas';
+      const scale = Math.min(2, (window.devicePixelRatio || 1) > 1 ? 1.5 : 2);
       const canvas = await html2canvas(certRef.current, {
-        scale: 2,
+        scale,
         useCORS: true,
-        backgroundColor: null,
+        allowTaint: false,
+        backgroundColor: '#ffffff',
         logging: false,
         width: TEMPLATE_W,
         height: TEMPLATE_H,
         windowWidth: TEMPLATE_W,
         windowHeight: TEMPLATE_H,
+        scrollX: 0,
+        scrollY: 0,
+        onclone: (doc) => {
+          const el = doc.getElementById('certificate-capture');
+          if (el) {
+            (el as HTMLElement).style.transform = 'none';
+          }
+        },
       });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      if (!canvas || !canvas.width || !canvas.height) throw new Error('Canvas rendering failed (empty canvas)');
+
+      step = 'encode-image';
+      let imgData = '';
+      try {
+        imgData = canvas.toDataURL('image/jpeg', 0.95);
+      } catch {
+        imgData = canvas.toDataURL('image/png');
+      }
+      if (!imgData || imgData === 'data:,') throw new Error('Failed to encode certificate image');
+
+      step = 'create-pdf';
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
       const pw = pdf.internal.pageSize.getWidth();
       const ph = pdf.internal.pageSize.getHeight();
-      pdf.addImage(imgData, 'PNG', 0, 0, pw, ph, undefined, 'FAST');
-      pdf.save(`${cert.childName.replace(/\s+/g, '_')}_Poochandi_Certificate.pdf`);
-    } catch (err) {
-      console.error(err);
-      alert(isTa ? 'PDF உருவாக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.' : 'Could not generate PDF. Please try again.');
+      const fmt = imgData.startsWith('data:image/jpeg') ? 'JPEG' : 'PNG';
+      pdf.addImage(imgData, fmt, 0, 0, pw, ph, undefined, 'FAST');
+
+      step = 'create-blob';
+      const blob = pdf.output('blob');
+      if (!blob || blob.size === 0) throw new Error('Failed to create PDF file');
+      const safeName = (cert.childName || 'Certificate').replace(/[^\p{L}\p{N}_ -]/gu, '').trim().replace(/\s+/g, '_') || 'Certificate';
+      const fileName = `${safeName}_Poochandi_Certificate.pdf`;
+
+      step = 'download';
+      const blobUrl = URL.createObjectURL(blob);
+      try {
+        // Try Web Share API with file on supported mobile browsers
+        try {
+          const file = new File([blob], fileName, { type: 'application/pdf' });
+          const nav: any = navigator;
+          if (nav.canShare && nav.canShare({ files: [file] })) {
+            await nav.share({ files: [file], title: 'Good Child Certificate', text: fileName });
+            return;
+          }
+        } catch (shareErr: any) {
+          // If user cancelled share, treat as completed; otherwise fall through to download
+          if (shareErr && (shareErr.name === 'AbortError' || shareErr.name === 'NotAllowedError')) return;
+        }
+
+        // Standard blob download
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = fileName;
+        a.rel = 'noopener';
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        // Fallback: open in new tab (useful if download is blocked on some mobile browsers)
+        setTimeout(() => {
+          try {
+            if (document.visibilityState === 'visible') {
+              window.open(blobUrl, '_blank', 'noopener,noreferrer');
+            }
+          } catch {}
+        }, 1200);
+      } finally {
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+      }
+    } catch (err: any) {
+      console.error('[Certificate PDF] failed at step:', step, err);
+      const msg = isTa
+        ? 'PDF உருவாக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும். (பிழை: ' + step + ')'
+        : 'Could not generate PDF. Please try again. (Error: ' + step + ')';
+      setDownloadError(msg);
     } finally {
       setDownloading(false);
     }
@@ -168,6 +261,7 @@ export default function GoodChildCertificate({ lang }: Props) {
   const reset = () => {
     setCert(null);
     setError('');
+    setDownloadError('');
     setChildName('');
     setAge('');
     setFatherName('');
@@ -236,6 +330,7 @@ export default function GoodChildCertificate({ lang }: Props) {
             <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="w-full overflow-x-auto pb-2">
                 <div
+                  id="certificate-capture"
                   ref={certRef}
                   className="relative mx-auto overflow-hidden bg-white"
                   style={{ width: TEMPLATE_W, height: TEMPLATE_H }}
@@ -291,12 +386,18 @@ export default function GoodChildCertificate({ lang }: Props) {
                 <AdSenseSlot slotId="certificate-below-preview" format="auto" className="my-4" />
               </div>
 
+              {downloadError && (
+                <div className="p-3 rounded-xl bg-red-950/70 border border-red-700/50 text-red-200 text-sm">
+                  {downloadError}
+                </div>
+              )}
+
               <div className="flex flex-col sm:flex-row gap-3">
-                <button type="button" onClick={onDownload} disabled={downloading} className="flex-1 inline-flex items-center justify-center gap-2 min-h-[48px] px-6 py-3.5 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-slate-950 font-black shadow-lg disabled:opacity-60">
+                <button type="button" onClick={onDownload} disabled={downloading} className="flex-1 inline-flex items-center justify-center gap-2 min-h-[48px] px-6 py-3.5 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-slate-950 font-black shadow-lg disabled:opacity-60 disabled:cursor-not-allowed">
                   <Download className="w-5 h-5" />
                   <span>{downloading ? (isTa ? 'PDF உருவாக்குகிறது...' : 'Generating PDF...') : t.download}</span>
                 </button>
-                <button type="button" onClick={reset} className="inline-flex items-center justify-center gap-2 min-h-[48px] px-6 py-3.5 rounded-2xl bg-[#1d103f] hover:bg-[#271654] border border-purple-700/50 text-purple-100 font-bold">
+                <button type="button" onClick={reset} disabled={downloading} className="inline-flex items-center justify-center gap-2 min-h-[48px] px-6 py-3.5 rounded-2xl bg-[#1d103f] hover:bg-[#271654] border border-purple-700/50 text-purple-100 font-bold disabled:opacity-60">
                   <RefreshCw className="w-5 h-5" />
                   <span>{t.again}</span>
                 </button>
