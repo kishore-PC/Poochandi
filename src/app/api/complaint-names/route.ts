@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { execute, initDb } from '@/lib/db';
+import { execute, initDb, queryOne } from '@/lib/db';
 
 export async function POST(req: NextRequest) {
   try {
     await initDb();
+    const statusRow = await queryOne<{ value: string }>('SELECT value FROM site_settings WHERE key = ?', ['name_entry_status']);
+    if (statusRow?.value === 'stopped') {
+      return NextResponse.json({ error: 'Name entry is currently paused. Please try again later.' }, { status: 403 });
+    }
     const body = await req.json();
     const { childName, childAge, entryId: clientEntryId } = body;
 

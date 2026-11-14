@@ -1,11 +1,12 @@
 import React from 'react';
 import Image from 'next/image';
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { Language } from '@/lib/i18n';
 import ComplaintNameForm from '@/components/forms/ComplaintNameForm';
 import AdSenseSlot from '@/components/ads/AdSenseSlot';
 import { ArrowDown } from 'lucide-react';
-import { queryAll } from '@/lib/db';
+import { initDb, queryAll, queryOne } from '@/lib/db';
 
 interface ComplaintNameListPageProps {
   params: Promise<{ lang: string }>;
@@ -28,10 +29,16 @@ export default async function ComplaintNameListPage({ params }: ComplaintNameLis
   const lang: Language = rawLang === 'ta' ? 'ta' : 'en';
   let logoUrl = '/images/poochandi-logo.svg';
   try {
+    await initDb();
+    const statusRow = await queryOne<{ value: string }>('SELECT value FROM site_settings WHERE key = ?', ['name_entry_status']);
+    if (statusRow?.value === 'stopped') {
+      redirect(`/${lang}/complaint-name-list/paused`);
+    }
     const rows = await queryAll<{ key: string; value: string }>(`SELECT key, value FROM site_settings WHERE key = 'logo_url'`);
     if (rows[0]?.value) logoUrl = rows[0].value;
-  } catch {
-    // keep fallback logo
+  } catch (e: any) {
+    // Allow Next.js redirect() to propagate; keep fallback logo on other errors
+    if (e && typeof e === 'object' && 'digest' in e && String((e as any).digest).startsWith('NEXT_REDIRECT')) throw e;
   }
 
   return (

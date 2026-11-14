@@ -49,6 +49,11 @@ export default function AdminDashboardPage() {
   const [isEditingNames, setIsEditingNames] = useState(false);
   const [editNamesText, setEditNamesText] = useState('');
 
+  // Name entry control (global stop/resume)
+  const [nameEntryStatus, setNameEntryStatus] = useState<'active' | 'stopped'>('active');
+  const [nameEntryStatusLoading, setNameEntryStatusLoading] = useState(true);
+  const [nameEntryStatusSaving, setNameEntryStatusSaving] = useState(false);
+
   // Articles CMS state
   const [articles, setArticles] = useState<any[]>([]);
   const [showArticleModal, setShowArticleModal] = useState(false);
@@ -74,6 +79,7 @@ export default function AdminDashboardPage() {
     fetchComplaintNames();
     fetchArticles();
     fetchSettings();
+    fetchNameEntryStatus();
   }, [sortOrder]);
 
   const fetchComplaintNames = async () => {
@@ -114,6 +120,49 @@ export default function AdminDashboardPage() {
       if (s.logo_url) setLogoPreview(s.logo_url);
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const fetchNameEntryStatus = async () => {
+    try {
+      setNameEntryStatusLoading(true);
+      const res = await fetch('/api/admin/name-entry-status');
+      if (res.status === 401) {
+        router.push('/admin/login');
+        return;
+      }
+      const data = await res.json();
+      setNameEntryStatus(data.status === 'stopped' ? 'stopped' : 'active');
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setNameEntryStatusLoading(false);
+    }
+  };
+
+  const handleSetNameEntryStatus = async (nextStatus: 'active' | 'stopped') => {
+    if (nextStatus === nameEntryStatus) return;
+    const message = nextStatus === 'stopped'
+      ? 'Stop new name entries globally? Parents will not be able to submit names until you resume.'
+      : 'Resume name entries globally? Parents will be able to submit names again.';
+    if (!confirm(message)) return;
+    try {
+      setNameEntryStatusSaving(true);
+      const res = await fetch('/api/admin/name-entry-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Failed to update status');
+      setNameEntryStatus(data.status === 'stopped' ? 'stopped' : 'active');
+      setStatusMessage(nextStatus === 'stopped' ? 'Name entry has been stopped globally.' : 'Name entry has been resumed globally.');
+      setTimeout(() => setStatusMessage(''), 3500);
+    } catch (e: any) {
+      console.error(e);
+      alert(e.message || 'Failed to update name entry status');
+    } finally {
+      setNameEntryStatusSaving(false);
     }
   };
 
@@ -569,6 +618,39 @@ export default function AdminDashboardPage() {
           {/* TAB 1: COMPLAINT NAME LIST MANAGEMENT */}
           {activeTab === 'complaint_names' && (
             <div className="space-y-6">
+              {/* NAME ENTRY CONTROL */}
+              <div className="p-5 sm:p-6 rounded-3xl bg-[#140b2e] border border-purple-800/40 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                  <div>
+                    <h3 className="text-base sm:text-lg font-black text-white">NAME ENTRY CONTROL</h3>
+                    <p className="text-xs text-slate-400 mt-1">Globally stop or resume new Complaint Name List submissions from the Admin Panel.</p>
+                  </div>
+                  <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-black ${nameEntryStatus === 'stopped' ? 'bg-red-950/50 border-red-700/50 text-red-300' : 'bg-emerald-950/50 border-emerald-700/50 text-emerald-300'}`}>
+                    <span className={`w-2.5 h-2.5 rounded-full ${nameEntryStatus === 'stopped' ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                    <span>Name Entry: {nameEntryStatusLoading ? '...' : (nameEntryStatus === 'stopped' ? 'STOPPED' : 'ACTIVE')}</span>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleSetNameEntryStatus('stopped')}
+                    disabled={nameEntryStatusLoading || nameEntryStatusSaving || nameEntryStatus === 'stopped'}
+                    className="inline-flex items-center justify-center min-h-[44px] px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    STOP NAME ENTRY
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSetNameEntryStatus('active')}
+                    disabled={nameEntryStatusLoading || nameEntryStatusSaving || nameEntryStatus === 'active'}
+                    className="inline-flex items-center justify-center min-h-[44px] px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    RESUME NAME ENTRY
+                  </button>
+                </div>
+                <p className="text-[11px] text-slate-500">When stopped, the entry form is hidden globally (including direct URLs/old tabs) and backend submissions are rejected. Existing database entries remain unchanged.</p>
+              </div>
+
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                   <h2 className="text-2xl font-black text-white">Complaint Name List Management</h2>
