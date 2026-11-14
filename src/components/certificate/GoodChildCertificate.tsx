@@ -26,23 +26,20 @@ type CertData = {
   photoDataUrl: string | null;
 };
 
-const W = 1536;
-const H = 1024;
-const AR = `${W} / ${H}`; // matches background image aspect ratio (3:2)
-
-function pct(n: number, base: number) {
-  return `${(n / base) * 100}%`;
-}
+const W = 1920;
+const H = 1280;
+const AR = `${W} / ${H}`;
 
 function getKolkataDateInfo() {
   const now = new Date();
   const monthYear = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', month: 'long', year: 'numeric' }).format(now);
-  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'long', year: 'numeric' }).formatToParts(now);
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' }).formatToParts(now);
   const get = (t: string) => parts.find((p) => p.type === t)?.value || '';
   const dayRaw = get('day');
-  const day = dayRaw ? String(parseInt(dayRaw, 10)) : '';
-  const issueDate = `${day} ${get('month')} ${get('year')}`.trim();
+  const day = dayRaw ? String(parseInt(dayRaw, 10)).padStart(2, '0') : get('day');
+  const mon = get('month');
   const year = get('year') || String(now.getFullYear());
+  const issueDate = `${day} ${mon} ${year}`.trim(); // DD MMM YYYY
   return { monthYear, issueDate, year };
 }
 
@@ -93,13 +90,7 @@ async function processPhoto(file: File): Promise<string> {
   ctx.fillStyle = '#fff';
   ctx.fillRect(0, 0, width, height);
   ctx.drawImage(img, 0, 0, width, height);
-  return c.toDataURL('image/jpeg', 0.92); // strips EXIF, base64 data URL
-}
-
-function clampFontSize(text: string, maxPx: number, minPx: number, charsAtMax: number) {
-  const n = (text || '').length;
-  if (n <= charsAtMax) return maxPx;
-  return Math.max(minPx, Math.floor(maxPx * (charsAtMax / n)));
+  return c.toDataURL('image/jpeg', 0.92);
 }
 
 export default function GoodChildCertificate({ lang }: Props) {
@@ -190,34 +181,16 @@ export default function GoodChildCertificate({ lang }: Props) {
     await waitImagesLoaded(node);
     await new Promise((r) => setTimeout(r, 120));
 
-    // Generate high-quality PNG (2x logical size)
     const pixelRatio = 2;
-    const dataUrl = await toPng(node, {
-      quality: 0.95,
-      cacheBust: true,
-      pixelRatio,
-      width: W,
-      height: H,
-      backgroundColor: '#ffffff',
-      style: { transform: 'none', margin: '0' },
-    });
+    const dataUrl = await toPng(node, { cacheBust: true, pixelRatio, width: W, height: H, backgroundColor: '#ffffff', style: { transform: 'none', margin: '0' } });
     if (!dataUrl || dataUrl === 'data:,') throw new Error('PNG generation returned empty data');
 
-    const blob = await toBlob(node, {
-      quality: 0.95,
-      cacheBust: true,
-      pixelRatio,
-      width: W,
-      height: H,
-      backgroundColor: '#ffffff',
-      style: { transform: 'none', margin: '0' },
-    });
+    const blob = await toBlob(node, { cacheBust: true, pixelRatio, width: W, height: H, backgroundColor: '#ffffff', style: { transform: 'none', margin: '0' } });
     if (!blob || blob.size === 0) {
       const b = await (await fetch(dataUrl)).blob();
       if (!b || b.size === 0) throw new Error('Failed to create PNG blob');
       return { dataUrl, blob: b };
     }
-    if (blob.type && blob.type !== 'image/png') console.warn('[Certificate] blob type:', blob.type);
     return { dataUrl, blob };
   };
 
@@ -225,19 +198,14 @@ export default function GoodChildCertificate({ lang }: Props) {
     const url = URL.createObjectURL(blob);
     try {
       const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      a.rel = 'noopener';
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      a.href = url; a.download = fileName; a.rel = 'noopener'; a.style.display = 'none';
+      document.body.appendChild(a); a.click(); a.remove();
     } finally {
       setTimeout(() => URL.revokeObjectURL(url), 120000);
     }
   };
 
-  const fileBase = () => `Good_Child_Certificate_${sanitizeFilename(cert?.childName || 'Child')}`;
+  const fileBase = () => `Poochandi_Good_Child_Certificate_${sanitizeFilename(cert?.childName || 'Child')}`;
 
   const runAction = async (kind: 'png' | 'share' | 'save' | 'pdf', fn: () => Promise<void>) => {
     if (!cert || busy) return;
@@ -246,26 +214,31 @@ export default function GoodChildCertificate({ lang }: Props) {
     catch (err: any) {
       const detail = err?.message || String(err);
       console.error(`[Certificate ${kind}]`, detail, err);
-      const friendly = detail.includes('render-png') || detail.includes('PNG') ? detail : `PNG/render error: ${detail}`;
-      setStatusErr((isTa ? 'செயல் தோல்வி: ' : 'Action failed: ') + friendly);
+      setStatusErr((isTa ? 'செயல் தோல்வி: ' : 'Action failed: ') + detail);
       setStatusMsg('');
       return;
     } finally { setBusy(''); }
   };
 
   const onDownloadPng = () => runAction('png', async () => {
-    const { blob } = await renderCertificatePng();
-    await downloadBlob(blob, `${fileBase()}.png`);
+    const certNode = exportRef.current;
+    if (!certNode) throw new Error('Certificate element not found');
+    await document.fonts.ready;
+    await waitImagesLoaded(certNode);
+    await new Promise((r) => setTimeout(r, 120));
+    const dataUrl = await toPng(certNode, { cacheBust: true, pixelRatio: 2, width: W, height: H, backgroundColor: '#ffffff', style: { transform: 'none', margin: '0' } });
+    if (!dataUrl || dataUrl === 'data:,') throw new Error('PNG generation returned empty data');
+    const link = document.createElement('a');
+    link.download = `Poochandi_Good_Child_Certificate_${Date.now()}.png`;
+    link.href = dataUrl;
+    link.click();
     setStatusMsg(isTa ? 'PNG பதிவிறக்கம் தயாராக உள்ளது.' : 'PNG download ready.');
   });
 
   const onSave = () => runAction('save', async () => {
     const { blob } = await renderCertificatePng();
-    await downloadBlob(blob, `${fileBase()}.png`);
-    try {
-      const url = URL.createObjectURL(blob);
-      setTimeout(() => { try { window.open(url, '_blank', 'noopener,noreferrer'); } catch {} setTimeout(() => URL.revokeObjectURL(url), 60000); }, 1500);
-    } catch {}
+    await downloadBlob(blob, `${fileBase()}_${Date.now()}.png`);
+    try { const url = URL.createObjectURL(blob); setTimeout(() => { try { window.open(url, '_blank', 'noopener,noreferrer'); } catch {} setTimeout(() => URL.revokeObjectURL(url), 60000); }, 1500); } catch {}
     setStatusMsg(isTa ? 'சாதனத்தில் சேமிக்க முயற்சிக்கிறது.' : 'Save to device initiated.');
   });
 
@@ -304,115 +277,109 @@ export default function GoodChildCertificate({ lang }: Props) {
 
   const reset = () => { setCert(null); setError(''); setStatusErr(''); setStatusMsg(''); setChildName(''); setAge(''); setFatherName(''); setMotherName(''); setCity(''); removePhoto(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
-  const nameFs = cert ? clampFontSize(cert.childName, 72, 28, 18) : 72;
-
-  // Percentage-based positioning (relative to 1536x1024 template) - aligned to template's drawn areas
-  const pos = {
-    photo: { left: pct(1118, W), top: pct(90, H), width: pct(248, W), height: pct(248, H) },
-    name: { left: pct(210, W), top: pct(360, H), width: pct(900, W), height: pct(96, H) },
-    ribbon: { left: pct(590, W), top: pct(454, H), width: pct(356, W), height: pct(44, H) },
-    leftPanel: { left: pct(215, W), top: pct(585, H), width: pct(420, W), height: pct(126, H) },
-    rightPanel: { left: pct(900, W), top: pct(585, H), width: pct(430, W), height: pct(126, H) },
-    brandL: { left: pct(70, W), top: pct(918, H), width: pct(360, W), height: pct(52, H) },
-    brandR: { left: pct(1105, W), top: pct(918, H), width: pct(360, W), height: pct(52, H) },
-  } as const;
-
-  const transparentBase: React.CSSProperties = { background: 'transparent', border: 'none', boxShadow: 'none' };
-  const labelStyle: React.CSSProperties = { ...transparentBase, fontSize: 'clamp(10px, 1.2vw, 14px)', fontWeight: 700, color: '#7c2d12', whiteSpace: 'nowrap', flexShrink: 0, lineHeight: 1.1 };
-  const valueStyle: React.CSSProperties = { ...transparentBase, fontSize: 'clamp(10px, 1.2vw, 14px)', fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, lineHeight: 1.1, maxWidth: '100%' };
-  const rowStyle: React.CSSProperties = { ...transparentBase, display: 'flex', alignItems: 'center', gap: '0.45em', minWidth: 0, height: '100%', overflow: 'hidden' };
+  const baseText: React.CSSProperties = { background: 'transparent', border: 'none', boxShadow: 'none', position: 'absolute', pointerEvents: 'none' };
+  const detailValue: React.CSSProperties = { ...baseText, fontWeight: 700, color: '#2C3E50', fontSize: '16px', lineHeight: 1.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
 
   const CertificateVisual = ({ id, nodeRef }: { id: string; nodeRef?: React.Ref<HTMLDivElement> }) => (
     <div
       id={id}
       ref={nodeRef}
       className={notoTamil.className}
-      style={{ position: 'relative', width: W, height: H, aspectRatio: AR, overflow: 'hidden', background: 'transparent', fontFamily: 'var(--font-noto-sans-tamil), "Noto Sans Tamil", Arial, sans-serif' }}
+      style={{ position: 'relative', width: W, height: H, aspectRatio: AR, overflow: 'hidden', background: '#fff' }}
     >
       <img
-        src="/images/poochandi-certificate-template.png"
-        alt="Certificate background"
+        src="/1000255472.png"
+        alt="Certificate template"
         crossOrigin="anonymous"
         draggable={false}
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }}
       />
 
-      {/* Single absolute overlay container for all dynamic elements */}
+      {/* Dynamic transparent overlays */}
       <div style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1, background: 'transparent' }}>
-        {/* Photo (inside golden frame, top-right) */}
-        <div style={{ position: 'absolute', ...pos.photo, borderRadius: '50%', overflow: 'hidden', background: 'transparent', border: 'none', boxShadow: 'none' }}>
-          {cert?.photoDataUrl ? (
-            <img
-              src={cert.photoDataUrl}
-              alt={cert.childName || 'Child photo'}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', borderRadius: '50%', display: 'block', background: 'transparent' }}
-            />
-          ) : null}
-        </div>
-
-        {/* Child Name (centered in banner area below "This certificate is proudly presented to") */}
-        <div style={{ position: 'absolute', ...pos.name, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', background: 'transparent', border: 'none', boxShadow: 'none', padding: `0 ${pct(10, W)}` }}>
-          <div
+        {/* Child Photo (blank circular golden frame area) */}
+        {cert?.photoDataUrl ? (
+          <img
+            src={cert.photoDataUrl}
+            alt={cert.childName || 'Child photo'}
             style={{
-              ...transparentBase,
-              width: '100%',
-              color: '#7c2d12',
-              fontWeight: 800,
-              fontSize: `clamp(28px, ${(nameFs / W) * 100}vw, ${nameFs}px)`,
-              lineHeight: 1.05,
-              letterSpacing: 0.2,
-              wordBreak: 'break-word',
-              overflowWrap: 'anywhere',
-              textAlign: 'center',
+              ...baseText,
+              top: '26.5%',
+              left: '67.5%',
+              width: '12.5%',
+              height: '18.75%', /* 12.5% of 1920 = 240px; 240/1280 = 18.75% to keep circle */
+              borderRadius: '50%',
+              objectFit: 'cover',
+              objectPosition: 'center',
+              border: '3px solid #F1C40F',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+              background: 'transparent',
+              pointerEvents: 'none',
             }}
-          >
-            {cert?.childName || ''}
-          </div>
+          />
+        ) : null}
+
+        {/* Child Name */}
+        <div
+          style={{
+            ...baseText,
+            color: '#8B0000',
+            fontWeight: 800,
+            fontSize: '36px',
+            textAlign: 'center',
+            width: '38%',
+            left: '31%',
+            top: '34.5%',
+            transform: 'translateY(-50%)',
+            fontFamily: "'Fredoka', 'Poppins', 'Noto Sans Tamil', sans-serif",
+            lineHeight: 1.1,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {cert?.childName || ''}
         </div>
 
-        {/* Month & Year (inside red ribbon) */}
-        <div style={{ position: 'absolute', ...pos.ribbon, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', background: 'transparent', border: 'none', boxShadow: 'none' }}>
-          <div style={{ ...transparentBase, color: '#fff7ed', fontWeight: 800, fontSize: 'clamp(14px, 1.9vw, 30px)', lineHeight: 1.1, textShadow: '0 1px 1px rgba(0,0,0,0.15)' }}>{cert?.monthYear || ''}</div>
+        {/* Month & Year Ribbon */}
+        <div
+          style={{
+            ...baseText,
+            color: '#FFD700',
+            fontWeight: 700,
+            fontSize: '20px',
+            textAlign: 'center',
+            width: '36%',
+            left: '32%',
+            top: '53.5%',
+            transform: 'translateY(-50%)',
+            textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
+            lineHeight: 1.1,
+          }}
+        >
+          {cert?.monthYear || ''}
         </div>
 
-        {/* Bottom-left details (transparent over template labels/lines) */}
-        <div style={{ position: 'absolute', ...pos.leftPanel, display: 'grid', gridTemplateRows: '1fr 1fr 1fr', alignItems: 'center', rowGap: '4%', background: 'transparent', border: 'none', boxShadow: 'none' }}>
-          <div style={rowStyle}>
-            <span style={labelStyle}>{isTa ? 'வயது' : 'Age'}:</span>
-            <span style={valueStyle}>{cert?.age || ''}</span>
-          </div>
-          <div style={{ ...rowStyle, visibility: cert?.fatherName ? 'visible' : 'hidden' }}>
-            <span style={labelStyle}>{isTa ? 'தந்தை பெயர்' : "Father's Name"}:</span>
-            <span style={valueStyle}>{cert?.fatherName || ''}</span>
-          </div>
-          <div style={{ ...rowStyle, visibility: cert?.motherName ? 'visible' : 'hidden' }}>
-            <span style={labelStyle}>{isTa ? 'தாய் பெயர்' : "Mother's Name"}:</span>
-            <span style={valueStyle}>{cert?.motherName || ''}</span>
-          </div>
+        {/* Left Details Column (values after colons) */}
+        <div style={{ ...detailValue, top: '61.2%', left: '36.5%' }}>
+          {cert?.age ? `${cert.age} Years` : ''}
+        </div>
+        <div style={{ ...detailValue, top: '65.5%', left: '36.5%', width: '14%' }}>
+          {cert?.fatherName || ''}
+        </div>
+        <div style={{ ...detailValue, top: '69.8%', left: '36.5%', width: '14%' }}>
+          {cert?.motherName || ''}
         </div>
 
-        {/* Bottom-right details (transparent over template icons/labels) */}
-        <div style={{ position: 'absolute', ...pos.rightPanel, display: 'grid', gridTemplateRows: '1fr 1fr 1fr', alignItems: 'center', rowGap: '4%', background: 'transparent', border: 'none', boxShadow: 'none' }}>
-          <div style={{ ...rowStyle, visibility: cert?.city ? 'visible' : 'hidden' }}>
-            <span style={labelStyle}>{isTa ? 'நகரம் / ஊர்' : 'City / Town'}:</span>
-            <span style={valueStyle}>{cert?.city || ''}</span>
-          </div>
-          <div style={rowStyle}>
-            <span style={labelStyle}>{isTa ? 'வழங்கிய தேதி' : 'Issued On'}:</span>
-            <span style={valueStyle}>{cert?.issueDate || ''}</span>
-          </div>
-          <div style={rowStyle}>
-            <span style={labelStyle}>{isTa ? 'சான்றிதழ் எண்' : 'Certificate ID'}:</span>
-            <span style={{ ...valueStyle, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' }}>{cert?.certId || ''}</span>
-          </div>
+        {/* Right Details Column (values after colons) */}
+        <div style={{ ...detailValue, top: '61.2%', left: '65.5%', width: '13%' }}>
+          {cert?.city || ''}
         </div>
-
-        {/* Bottom branding (transparent, aligned to template footer areas) */}
-        <div style={{ position: 'absolute', ...pos.brandL, display: 'flex', alignItems: 'center', gap: '3%', color: '#fff7ed', background: 'transparent', border: 'none', boxShadow: 'none' }}>
-          <span style={{ ...transparentBase, fontSize: 'clamp(12px, 1.5vw, 22px)', fontWeight: 700, lineHeight: 1 }}>@poochandi.in</span>
+        <div style={{ ...detailValue, top: '65.5%', left: '65.5%' }}>
+          {cert?.issueDate || ''}
         </div>
-        <div style={{ position: 'absolute', ...pos.brandR, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', color: '#ecfccb', background: 'transparent', border: 'none', boxShadow: 'none' }}>
-          <span style={{ ...transparentBase, fontSize: 'clamp(12px, 1.6vw, 24px)', fontWeight: 800, lineHeight: 1, textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}>Poochandi Varran</span>
+        <div style={{ ...detailValue, top: '69.8%', left: '65.5%', fontSize: '15px' }}>
+          {cert?.certId || ''}
         </div>
       </div>
     </div>
@@ -464,12 +431,10 @@ export default function GoodChildCertificate({ lang }: Props) {
             <div className="min-h-[360px] rounded-3xl border border-dashed border-purple-700/50 bg-[#12082b]/50 flex items-center justify-center text-center p-8 text-slate-400"><p className="font-semibold">{isTa ? 'விவரங்களை நிரப்பி சான்றிதழை உருவாக்கவும்.' : 'Fill the form and generate to see the certificate preview.'}</p></div>
           ) : (
             <div className="space-y-5">
-              {/* Responsive preview: exact aspect-ratio container, scales seamlessly (no crop/distortion) */}
               <div className="w-full rounded-2xl bg-[#0d0522]/40 border border-purple-900/30 p-2 sm:p-3 overflow-hidden">
                 <div className="w-full mx-auto" style={{ aspectRatio: AR, maxWidth: '100%', position: 'relative' }}>
                   <div style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-                    {/* Render fixed-size cert scaled to fit container via CSS transform */}
-                    <div style={{ width: W, height: H, transformOrigin: 'top left', transform: 'scale(var(--cert-scale, 1))', position: 'absolute', top: 0, left: 0 }}>
+                    <div style={{ width: W, height: H, transformOrigin: 'top left', position: 'absolute', top: 0, left: 0 }}>
                       <CertificateVisual id="certificate-preview-visual" />
                     </div>
                     <PreviewScaler targetW={W} targetH={H} />
@@ -477,7 +442,7 @@ export default function GoodChildCertificate({ lang }: Props) {
                 </div>
               </div>
 
-              {/* Offscreen export renderer: fixed size, no transform (used for PNG/PDF/share) */}
+              {/* Offscreen export renderer (fixed 1920x1280) */}
               <div aria-hidden="true" style={{ position: 'fixed', left: -10000, top: 0, width: W, height: H, opacity: 1, pointerEvents: 'none', zIndex: -1 }}>
                 <CertificateVisual id="certificate-node" nodeRef={exportRef} />
               </div>
