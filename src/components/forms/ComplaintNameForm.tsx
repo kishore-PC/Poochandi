@@ -163,6 +163,9 @@ export default function ComplaintNameForm({ lang }: ComplaintNameFormProps) {
             <Check className="w-5 h-5 text-slate-950 stroke-[3]" />
             <span>{isSubmitting ? (lang === 'ta' ? 'சமர்ப்பிக்கிறது...' : 'Submitting...') : (lang === 'ta' ? 'உறுதி செய்க (CONFIRM)' : 'CONFIRM & SUBMIT')}</span>
           </button>
+          {isSubmitting && (
+            <div id="ad-interstitial-trigger" data-ad-type="interstitial" data-ad-trigger="complaint-name-submit" aria-hidden="true" className="h-0 w-0 overflow-hidden" />
+          )}
         </div>
       </form>
 

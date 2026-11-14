@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Clock, Calendar, ArrowLeft } from 'lucide-react';
+import AdSenseSlot from '@/components/ads/AdSenseSlot';
 
 type Lang = 'en' | 'ta';
 type Article = {
@@ -17,6 +18,41 @@ export default function ArticleContentView({ article, initialLang }: { article: 
   const excerpt = lang === 'ta' ? article.excerpt_ta : article.excerpt_en;
   const content = lang === 'ta' ? article.content_ta : article.content_en;
   const blocks = String(content || '').split(/\n\n+/).filter(Boolean);
+
+  const countWords = (text: string) => String(text || '').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean).length;
+  let cumulativeWords = 0;
+  let adIndex = 0;
+  const contentElements: React.ReactNode[] = [];
+
+  blocks.forEach((block, i) => {
+    const key = `b-${i}`;
+    if (block.startsWith('## ')) {
+      contentElements.push(<h2 key={key} className="text-xl sm:text-2xl font-black text-white pt-4" style={{ textShadow: '0 1px 0 #000' }}>{block.replace(/^##\s*/, '')}</h2>);
+    } else if (block.startsWith('### ')) {
+      contentElements.push(<h3 key={key} className="text-lg sm:text-xl font-bold text-[#FACC15] pt-2">{block.replace(/^###\s*/, '')}</h3>);
+    } else {
+      const lines = block.split('\n').filter(Boolean);
+      if (lines.length > 1) {
+        contentElements.push(
+          <ol key={key} className="space-y-2 list-decimal list-inside bg-[#181A20] border border-[#1E293B] rounded-2xl p-4 sm:p-5">
+            {lines.map((ln, j) => <li key={j} className="text-slate-300">{ln.replace(/^\d+\.\s*/, '')}</li>)}
+          </ol>
+        );
+      } else {
+        contentElements.push(<p key={key} className="text-slate-300">{block}</p>);
+      }
+    }
+
+    cumulativeWords += countWords(block);
+    while (cumulativeWords >= (adIndex + 1) * 300) {
+      adIndex += 1;
+      contentElements.push(
+        <div key={`ad-${adIndex}-after-${i}`} data-ad-unit="article-in-content" data-ad-after-words={adIndex * 300}>
+          <AdSenseSlot slotId={`article-in-content-${adIndex}`} />
+        </div>
+      );
+    }
+  });
 
   return (
     <div className="space-y-6">
@@ -44,15 +80,7 @@ export default function ArticleContentView({ article, initialLang }: { article: 
       <div className="p-5 rounded-2xl bg-[#181A20] border border-[#1E293B] border-l-4 border-l-[#FACC15] text-slate-200 leading-relaxed">{excerpt}</div>
 
       <div className="space-y-4 text-slate-200 leading-relaxed">
-        {blocks.map((block, i) => {
-          if (block.startsWith('## ')) return <h2 key={i} className="text-xl sm:text-2xl font-black text-white pt-4" style={{ textShadow: '0 1px 0 #000' }}>{block.replace(/^##\s*/, '')}</h2>;
-          if (block.startsWith('### ')) return <h3 key={i} className="text-lg sm:text-xl font-bold text-[#FACC15] pt-2">{block.replace(/^###\s*/, '')}</h3>;
-          const lines = block.split('\n').filter(Boolean);
-          if (lines.length > 1) {
-            return <ol key={i} className="space-y-2 list-decimal list-inside bg-[#181A20] border border-[#1E293B] rounded-2xl p-4 sm:p-5">{lines.map((ln, j) => <li key={j} className="text-slate-300">{ln.replace(/^\d+\.\s*/, '')}</li>)}</ol>;
-          }
-          return <p key={i} className="text-slate-300">{block}</p>;
-        })}
+        {contentElements}
       </div>
 
       <div className="pt-4 text-center">

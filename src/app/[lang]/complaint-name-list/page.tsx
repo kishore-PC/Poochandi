@@ -44,6 +44,10 @@ export default async function ComplaintNameListPage({ params }: ComplaintNameLis
   return (
     <div className="py-12 md:py-20 relative">
       <div className="max-w-3xl mx-auto px-4 sm:px-6">
+        {/* Banner Ad placeholder (top of form page) */}
+        <div id="ad-banner-top-complaint" data-ad-placement="banner-top" data-page="complaint-name-list">
+          <AdSenseSlot slotId="complaint-name-list-banner-top" format="horizontal" />
+        </div>
         
         {/* TOP SECTION */}
         <div className="text-center space-y-4 mb-8">

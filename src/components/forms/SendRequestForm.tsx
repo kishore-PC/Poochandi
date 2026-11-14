@@ -235,6 +235,9 @@ export default function SendRequestForm({ lang }: SendRequestFormProps) {
           <Sparkles className="w-5 h-5 text-slate-950" />
           <span>{isSubmitting ? dict.sendRequest.submitting : dict.sendRequest.submitButton}</span>
         </button>
+        {isSubmitting && (
+          <div id="ad-interstitial-trigger" data-ad-type="interstitial" data-ad-trigger="send-request-submit" aria-hidden="true" className="h-0 w-0 overflow-hidden" />
+        )}
 
         <p className="text-center text-xs text-slate-500">
           {dict.sendRequest.privacyNote}

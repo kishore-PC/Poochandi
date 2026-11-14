@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import { Language, dictionaries } from '@/lib/i18n';
+import AdSenseSlot from '@/components/ads/AdSenseSlot';
 import SendRequestForm from '@/components/forms/SendRequestForm';
 import { Sparkles, ShieldCheck } from 'lucide-react';
 
@@ -28,6 +29,10 @@ export default async function SendRequestPage({ params }: SendRequestPageProps) 
   return (
     <div className="py-12 md:py-20 relative">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        {/* Banner Ad placeholder (top of form page) */}
+        <div id="ad-banner-top-request" data-ad-placement="banner-top" data-page="send-request">
+          <AdSenseSlot slotId="send-request-banner-top" format="horizontal" />
+        </div>
         
         {/* Header with Character Icon */}
         <div className="text-center space-y-4 mb-10">
