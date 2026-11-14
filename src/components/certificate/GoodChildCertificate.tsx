@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Noto_Sans_Tamil } from 'next/font/google';
+import { toBlob, toPng } from 'html-to-image';
 import { Camera, Download, ImagePlus, RefreshCw, Save, Share2, ShieldCheck, Sparkles, Trash2, Upload } from 'lucide-react';
 import AdSenseSlot from '@/components/ads/AdSenseSlot';
 
@@ -27,6 +28,11 @@ type CertData = {
 
 const W = 1536;
 const H = 1024;
+const AR = `${W} / ${H}`; // matches background image aspect ratio (3:2)
+
+function pct(n: number, base: number) {
+  return `${(n / base) * 100}%`;
+}
 
 function getKolkataDateInfo() {
   const now = new Date();
@@ -87,23 +93,19 @@ async function processPhoto(file: File): Promise<string> {
   ctx.fillStyle = '#fff';
   ctx.fillRect(0, 0, width, height);
   ctx.drawImage(img, 0, 0, width, height);
-  return c.toDataURL('image/jpeg', 0.92); // strips EXIF
+  return c.toDataURL('image/jpeg', 0.92); // strips EXIF, base64 data URL
 }
 
-function fitFont(text: string, base: number, min: number, charsAtBase: number) {
+function clampFontSize(text: string, maxPx: number, minPx: number, charsAtMax: number) {
   const n = (text || '').length;
-  if (n <= charsAtBase) return base;
-  return Math.max(min, Math.floor(base * (charsAtBase / n)));
+  if (n <= charsAtMax) return maxPx;
+  return Math.max(minPx, Math.floor(maxPx * (charsAtMax / n)));
 }
-
-type RenderResult = { blob: Blob; canvas: HTMLCanvasElement };
 
 export default function GoodChildCertificate({ lang }: Props) {
   const isTa = lang === 'ta';
   const exportRef = useRef<HTMLDivElement | null>(null);
-  const previewWrapRef = useRef<HTMLDivElement | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
-  const [scale, setScale] = useState(1);
 
   const [childName, setChildName] = useState('');
   const [age, setAge] = useState('');
@@ -121,20 +123,6 @@ export default function GoodChildCertificate({ lang }: Props) {
   const [statusErr, setStatusErr] = useState('');
 
   const kolkata = useMemo(() => getKolkataDateInfo(), []);
-
-  useEffect(() => {
-    const upd = () => {
-      const el = previewWrapRef.current;
-      if (!el) return;
-      const w = el.clientWidth || W;
-      setScale(Math.min(1, Math.max(0.2, w / W)));
-    };
-    upd();
-    window.addEventListener('resize', upd);
-    const ro = typeof ResizeObserver !== 'undefined' && previewWrapRef.current ? new ResizeObserver(upd) : null;
-    if (ro && previewWrapRef.current) ro.observe(previewWrapRef.current);
-    return () => { window.removeEventListener('resize', upd); ro?.disconnect(); };
-  }, [cert]);
 
   const t = isTa ? {
     title: 'நல்ல குழந்தை சான்றிதழ்', subtitle: 'உங்கள் குழந்தைக்கான தனிப்பயன் சான்றிதழை உருவாக்குங்கள்.',
@@ -179,14 +167,11 @@ export default function GoodChildCertificate({ lang }: Props) {
     setTimeout(() => document.getElementById('certificate-preview')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
   };
 
-  const waitReady = async (el: HTMLElement) => {
-    // fonts
-    try { // @ts-ignore
-      if (document.fonts?.ready) await document.fonts.ready; } catch {}
+  const waitImagesLoaded = async (el: HTMLElement) => {
     const imgs = Array.from(el.querySelectorAll('img')) as HTMLImageElement[];
     const failed: string[] = [];
     await Promise.all(imgs.map(async (img) => {
-      const src = img.currentSrc || img.src || '(unknown)';
+      const src = img.currentSrc || img.src || '(image)';
       try { if (img.decode) await img.decode(); } catch {}
       if (!img.complete) {
         await new Promise<void>((res) => { img.onload = () => res(); img.onerror = () => { failed.push(src); res(); }; });
@@ -194,58 +179,49 @@ export default function GoodChildCertificate({ lang }: Props) {
       if (img.naturalWidth === 0) failed.push(src);
     }));
     if (failed.length) throw new Error('Image failed to load: ' + failed.join(', '));
-    await new Promise((r) => setTimeout(r, 150));
   };
 
-  const renderCertificate = async (): Promise<RenderResult> => {
-    const el = exportRef.current;
+  const renderCertificatePng = async (): Promise<{ dataUrl: string; blob: Blob }> => {
+    const node = exportRef.current;
     if (!cert) throw new Error('No certificate data');
-    if (!el) throw new Error('Certificate element not found');
-    const rect = el.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) console.warn('[Certificate] export element size zero in layout, continuing with fixed size');
+    if (!node) throw new Error('Certificate element not found');
 
-    await waitReady(el);
-    const { default: html2canvas } = await import('html2canvas');
-    // Fixed export dimensions independent of viewport; scale for high-res PNG
-    const exportScale = 2; // 3072x2048
-    const canvas = await html2canvas(el, {
-      scale: exportScale,
-      useCORS: true,
-      allowTaint: false,
-      backgroundColor: '#ffffff',
-      logging: false,
+    await document.fonts.ready;
+    await waitImagesLoaded(node);
+    await new Promise((r) => setTimeout(r, 120));
+
+    // Generate high-quality PNG (2x logical size)
+    const pixelRatio = 2;
+    const dataUrl = await toPng(node, {
+      quality: 0.95,
+      cacheBust: true,
+      pixelRatio,
       width: W,
       height: H,
-      windowWidth: W,
-      windowHeight: H,
-      x: 0,
-      y: 0,
-      scrollX: 0,
-      scrollY: 0,
-      imageTimeout: 15000,
-      onclone: (doc) => {
-        const node = doc.getElementById('certificate-export') as HTMLElement | null;
-        if (node) { node.style.transform = 'none'; node.style.position = 'relative'; node.style.left = '0'; node.style.top = '0'; node.style.margin = '0'; }
-      },
+      backgroundColor: '#ffffff',
+      style: { transform: 'none', margin: '0' },
     });
-    if (!canvas || canvas.width === 0 || canvas.height === 0) throw new Error('Canvas creation failed (empty canvas)');
+    if (!dataUrl || dataUrl === 'data:,') throw new Error('PNG generation returned empty data');
 
-    const blob: Blob | null = await new Promise((resolve) => {
-      try { canvas.toBlob((b) => resolve(b), 'image/png'); }
-      catch { resolve(null); }
+    const blob = await toBlob(node, {
+      quality: 0.95,
+      cacheBust: true,
+      pixelRatio,
+      width: W,
+      height: H,
+      backgroundColor: '#ffffff',
+      style: { transform: 'none', margin: '0' },
     });
     if (!blob || blob.size === 0) {
-      // fallback
-      const dataUrl = canvas.toDataURL('image/png');
       const b = await (await fetch(dataUrl)).blob();
-      if (!b || b.size === 0) throw new Error('Blob creation failed (empty PNG)');
-      if (b.type && b.type !== 'image/png') console.warn('[Certificate] blob type', b.type);
-      return { blob: b, canvas };
+      if (!b || b.size === 0) throw new Error('Failed to create PNG blob');
+      return { dataUrl, blob: b };
     }
-    return { blob, canvas };
+    if (blob.type && blob.type !== 'image/png') console.warn('[Certificate] blob type:', blob.type);
+    return { dataUrl, blob };
   };
 
-  const downloadBlob = async (blob: Blob, fileName: string, mime: string) => {
+  const downloadBlob = async (blob: Blob, fileName: string) => {
     const url = URL.createObjectURL(blob);
     try {
       const a = document.createElement('a');
@@ -256,8 +232,6 @@ export default function GoodChildCertificate({ lang }: Props) {
       document.body.appendChild(a);
       a.click();
       a.remove();
-      // fallback open (esp. iOS Safari cases)
-      setTimeout(() => { try { /* keep url valid */ } catch {} }, 0);
     } finally {
       setTimeout(() => URL.revokeObjectURL(url), 120000);
     }
@@ -267,32 +241,27 @@ export default function GoodChildCertificate({ lang }: Props) {
 
   const runAction = async (kind: 'png' | 'share' | 'save' | 'pdf', fn: () => Promise<void>) => {
     if (!cert || busy) return;
-    setBusy(kind); setStatusErr(''); setStatusMsg(kind === 'share' ? t.sharePrep : kind === 'pdf' ? t.genPdf : kind === 'png' ? t.genPng : t.preparing);
+    setBusy(kind); setStatusErr(''); setStatusMsg(kind === 'share' ? t.sharePrep : kind === 'pdf' ? t.genPdf : t.genPng);
     try { await fn(); }
     catch (err: any) {
       const detail = err?.message || String(err);
       console.error(`[Certificate ${kind}]`, detail, err);
-      setStatusErr((isTa ? 'செயல் தோல்வி: ' : 'Action failed: ') + detail);
+      const friendly = detail.includes('render-png') || detail.includes('PNG') ? detail : `PNG/render error: ${detail}`;
+      setStatusErr((isTa ? 'செயல் தோல்வி: ' : 'Action failed: ') + friendly);
       setStatusMsg('');
       return;
-    }
-    finally { setBusy(''); }
+    } finally { setBusy(''); }
   };
 
   const onDownloadPng = () => runAction('png', async () => {
-    setStatusMsg(t.genPng);
-    const { blob } = await renderCertificate();
-    if (!blob || blob.type.indexOf('png') === -1 && blob.size === 0) throw new Error('Generated file is not a valid PNG');
-    await downloadBlob(blob, `${fileBase()}.png`, 'image/png');
+    const { blob } = await renderCertificatePng();
+    await downloadBlob(blob, `${fileBase()}.png`);
     setStatusMsg(isTa ? 'PNG பதிவிறக்கம் தயாராக உள்ளது.' : 'PNG download ready.');
   });
 
   const onSave = () => runAction('save', async () => {
-    setStatusMsg(t.genPng);
-    const { blob } = await renderCertificate();
-    if (!blob || blob.size === 0) throw new Error('Generated file is not a valid PNG');
-    await downloadBlob(blob, `${fileBase()}.png`, 'image/png');
-    // extra fallback for browsers ignoring download attribute
+    const { blob } = await renderCertificatePng();
+    await downloadBlob(blob, `${fileBase()}.png`);
     try {
       const url = URL.createObjectURL(blob);
       setTimeout(() => { try { window.open(url, '_blank', 'noopener,noreferrer'); } catch {} setTimeout(() => URL.revokeObjectURL(url), 60000); }, 1500);
@@ -301,9 +270,7 @@ export default function GoodChildCertificate({ lang }: Props) {
   });
 
   const onShare = () => runAction('share', async () => {
-    setStatusMsg(t.genPng);
-    const { blob } = await renderCertificate();
-    if (!blob || blob.size === 0) throw new Error('Generated file is not a valid PNG');
+    const { blob } = await renderCertificatePng();
     const file = new File([blob], `${fileBase()}.png`, { type: 'image/png' });
     const nav: any = navigator;
     if (nav?.canShare && nav.canShare({ files: [file] }) && nav.share) {
@@ -316,116 +283,150 @@ export default function GoodChildCertificate({ lang }: Props) {
         throw e;
       }
     } else {
-      await downloadBlob(blob, `${fileBase()}.png`, 'image/png');
-      setStatusMsg(isTa ? 'இந்த சாதனத்தில் கோப்பு பகிர்வு ஆதரவு இல்லை. PNG பதிவிறக்கம் செய்யப்பட்டது.' : 'File sharing not supported on this device. PNG downloaded instead.');
+      await downloadBlob(blob, `${fileBase()}.png`);
+      setStatusMsg(isTa ? 'கோப்பு பகிர்வு ஆதரவு இல்லை. PNG பதிவிறக்கம் செய்யப்பட்டது.' : 'File sharing not supported. PNG downloaded instead.');
     }
   });
 
   const onPdf = () => runAction('pdf', async () => {
-    setStatusMsg(t.genPdf);
-    const { blob, canvas } = await renderCertificate();
-    if (!blob || blob.size === 0) throw new Error('PNG render failed, cannot create PDF');
-    let imgData = '';
-    try { imgData = canvas.toDataURL('image/jpeg', 0.95); } catch { imgData = canvas.toDataURL('image/png'); }
-    if (!imgData || imgData === 'data:,') throw new Error('Failed to encode certificate image for PDF');
+    const { dataUrl } = await renderCertificatePng();
+    if (!dataUrl) throw new Error('PNG render failed, cannot create PDF');
     const { jsPDF } = await import('jspdf');
     const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
     const pw = pdf.internal.pageSize.getWidth();
     const ph = pdf.internal.pageSize.getHeight();
-    const fmt = imgData.startsWith('data:image/jpeg') ? 'JPEG' : 'PNG';
-    pdf.addImage(imgData, fmt, 0, 0, pw, ph, undefined, 'FAST');
+    pdf.addImage(dataUrl, 'PNG', 0, 0, pw, ph, undefined, 'FAST');
     const pblob = pdf.output('blob');
     if (!pblob || pblob.size === 0) throw new Error('PDF creation failed (empty file)');
-    await downloadBlob(pblob, `${fileBase()}.pdf`, 'application/pdf');
+    await downloadBlob(pblob, `${fileBase()}.pdf`);
     setStatusMsg(isTa ? 'PDF பதிவிறக்கம் தயாராக உள்ளது.' : 'PDF download ready.');
   });
 
   const reset = () => { setCert(null); setError(''); setStatusErr(''); setStatusMsg(''); setChildName(''); setAge(''); setFatherName(''); setMotherName(''); setCity(''); removePhoto(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
-  const nameFs = cert ? fitFont(cert.childName, 74, 32, 18) : 74;
+  const nameFs = cert ? clampFontSize(cert.childName, 74, 30, 18) : 74;
 
-  // Shared certificate visual (used for preview + export). Fixed 1536x1024.
-  const CertificateVisual = ({ id }: { id: string }) => (
-    <div id={id} ref={id === 'certificate-export' ? exportRef : undefined} className={notoTamil.className} style={{ position: 'relative', width: W, height: H, overflow: 'hidden', background: '#fff', fontFamily: 'var(--font-noto-sans-tamil), "Noto Sans Tamil", Arial, sans-serif' }}>
-      <img src="/images/poochandi-certificate-template.png" alt="Certificate background" crossOrigin="anonymous" draggable={false} width={W} height={H} style={{ position: 'absolute', inset: 0, width: W, height: H, objectFit: 'fill' }} />
+  // Percentage-based positioning (relative to 1536x1024 template)
+  const pos = {
+    nameCover: { left: pct(320, W), top: pct(314, H), width: pct(896, W), height: pct(124, H) },
+    ribbonCover: { left: pct(568, W), top: pct(450, H), width: pct(400, W), height: pct(60, H) },
+    leftCover: { left: pct(165, W), top: pct(575, H), width: pct(520, W), height: pct(170, H) },
+    rightCover: { left: pct(855, W), top: pct(575, H), width: pct(510, W), height: pct(170, H) },
+    bottomLCover: { left: pct(45, W), top: pct(900, H), width: pct(430, W), height: pct(92, H) },
+    bottomRCover: { left: pct(1060, W), top: pct(900, H), width: pct(430, W), height: pct(92, H) },
+    photo: { left: pct(1118, W), top: pct(92, H), width: pct(246, W), height: pct(246, H) },
+    name: { left: pct(320, W), top: pct(312, H), width: pct(896, W), height: pct(130, H) },
+    ribbon: { left: pct(560, W), top: pct(448, H), width: pct(416, W), height: pct(64, H) },
+    leftPanel: { left: pct(190, W), top: pct(584, H), width: pct(480, W), height: pct(152, H) },
+    rightPanel: { left: pct(878, W), top: pct(584, H), width: pct(468, W), height: pct(152, H) },
+    brandL: { left: pct(70, W), top: pct(912, H), width: pct(380, W), height: pct(66, H) },
+    brandR: { left: pct(1085, W), top: pct(912, H), width: pct(380, W), height: pct(66, H) },
+  } as const;
 
-      {/* Targeted covers to hide baked placeholder tokens/values in the template while preserving artwork.
-          Colors sampled from template regions to blend with artwork and avoid obvious rectangles. */}
-      {/* Name area */}
-      <div style={{ position: 'absolute', left: 320, top: 314, width: 896, height: 124, background: 'rgba(231,204,174,0.995)', borderRadius: 18 }} />
-      {/* Month ribbon */}
-      <div style={{ position: 'absolute', left: 568, top: 450, width: 400, height: 60, background: 'rgba(231,199,194,0.995)', borderRadius: 14 }} />
-      {/* Left info panel */}
-      <div style={{ position: 'absolute', left: 165, top: 575, width: 520, height: 170, background: 'rgba(192,162,138,0.995)', borderRadius: 16 }} />
-      {/* Right info panel */}
-      <div style={{ position: 'absolute', left: 855, top: 575, width: 510, height: 170, background: 'rgba(236,209,182,0.995)', borderRadius: 16 }} />
-      {/* Bottom branding/date/id strips (hide baked placeholders/AI tag) */}
-      <div style={{ position: 'absolute', left: 45, top: 900, width: 430, height: 92, background: 'rgba(190,133,89,0.995)', borderRadius: 18 }} />
-      <div style={{ position: 'absolute', left: 1060, top: 900, width: 430, height: 92, background: 'rgba(210,184,136,0.995)', borderRadius: 18 }} />
+  const labelStyle: React.CSSProperties = { fontSize: 'clamp(14px, 1.56vw, 24px)', fontWeight: 700, color: '#7c2d12', whiteSpace: 'nowrap', flexShrink: 0 };
+  const valueStyle: React.CSSProperties = { fontSize: 'clamp(15px, 1.7vw, 26px)', fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, lineHeight: 1.15 };
+  const rowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '0.6em', minWidth: 0, height: '100%' };
 
-      {/* Photo frame (upper-right, aligned to decorative frame area) */}
-      <div style={{ position: 'absolute', left: 1118, top: 92, width: 246, height: 246, borderRadius: '50%', overflow: 'hidden', border: '7px solid rgba(214,178,70,0.98)', boxShadow: '0 8px 18px rgba(0,0,0,0.18)', background: 'linear-gradient(180deg,#fff7e6,#ffe8bf)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+  const CertificateVisual = ({ id, nodeRef }: { id: string; nodeRef?: React.Ref<HTMLDivElement> }) => (
+    <div
+      id={id}
+      ref={nodeRef}
+      className={notoTamil.className}
+      style={{ position: 'relative', width: W, height: H, aspectRatio: AR, overflow: 'hidden', background: '#fff', fontFamily: 'var(--font-noto-sans-tamil), "Noto Sans Tamil", Arial, sans-serif' }}
+    >
+      <img
+        src="/images/poochandi-certificate-template.png"
+        alt="Certificate background"
+        crossOrigin="anonymous"
+        draggable={false}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }}
+      />
+
+      {/* Covers to hide baked template placeholders/tokens (colors sampled to blend) */}
+      <div style={{ position: 'absolute', ...pos.nameCover, background: 'rgba(231,204,174,0.995)', borderRadius: '1.2%' }} />
+      <div style={{ position: 'absolute', ...pos.ribbonCover, background: 'rgba(231,199,194,0.995)', borderRadius: '0.9%' }} />
+      <div style={{ position: 'absolute', ...pos.leftCover, background: 'rgba(192,162,138,0.995)', borderRadius: '1%' }} />
+      <div style={{ position: 'absolute', ...pos.rightCover, background: 'rgba(236,209,182,0.995)', borderRadius: '1%' }} />
+      <div style={{ position: 'absolute', ...pos.bottomLCover, background: 'rgba(190,133,89,0.995)', borderRadius: '1.2%' }} />
+      <div style={{ position: 'absolute', ...pos.bottomRCover, background: 'rgba(210,184,136,0.995)', borderRadius: '1.2%' }} />
+
+      {/* Photo (upper-right frame) */}
+      <div style={{ position: 'absolute', ...pos.photo, borderRadius: '50%', overflow: 'hidden', border: `${Math.max(4, Math.round(W * 0.0045))}px solid rgba(214,178,70,0.98)`, boxShadow: '0 8px 18px rgba(0,0,0,0.18)', background: 'linear-gradient(180deg,#fff7e6,#ffe8bf)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {cert?.photoDataUrl ? (
-          <img src={cert.photoDataUrl} alt={cert.childName || 'Child photo'} crossOrigin="anonymous" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center center' }} />
+          <img src={cert.photoDataUrl} alt={cert.childName || 'Child photo'} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', borderRadius: '12px' }} />
         ) : (
-          <div style={{ textAlign: 'center', color: '#92400e', padding: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}><Camera size={44} color="#b45309" /></div>
-            <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.2 }}>{isTa ? 'குழந்தை புகைப்படம்' : 'Child Photo'}</div>
+          <div style={{ textAlign: 'center', color: '#92400e', padding: '6%' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '4%' }}><Camera size={44} color="#b45309" /></div>
+            <div style={{ fontSize: 'clamp(12px, 1.3vw, 20px)', fontWeight: 700, lineHeight: 1.2 }}>{isTa ? 'குழந்தை புகைப்படம்' : 'Child Photo'}</div>
           </div>
         )}
       </div>
 
-      {/* Child name (centered in name frame) */}
-      <div style={{ position: 'absolute', left: 320, top: 312, width: 896, height: 130, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '0 24px' }}>
-        <div style={{ width: '100%', color: '#7c2d12', fontWeight: 800, fontSize: nameFs, lineHeight: 1.06, letterSpacing: 0.2, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{cert?.childName || ''}</div>
-      </div>
-
-      {/* Month & Year (pink ribbon) */}
-      <div style={{ position: 'absolute', left: 560, top: 448, width: 416, height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '0 12px' }}>
-        <div style={{ color: '#9d174d', fontWeight: 800, fontSize: 36, lineHeight: 1.1 }}>{cert?.monthYear || ''}</div>
-      </div>
-
-      {/* Left info: Age, Father's Name, Mother's Name */}
-      <div style={{ position: 'absolute', left: 190, top: 584, width: 480, height: 152, display: 'grid', gridTemplateRows: '1fr 1fr 1fr', alignItems: 'center', rowGap: 4, color: '#3f2a14' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, height: '100%' }}>
-          <span style={{ fontSize: 24, fontWeight: 700, color: '#7c2d12', whiteSpace: 'nowrap' }}>{isTa ? 'வயது' : 'Age'}:</span>
-          <span style={{ fontSize: 28, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.15 }}>{cert?.age || ''}</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, height: '100%', visibility: cert?.fatherName ? 'visible' : 'hidden' }}>
-          <span style={{ fontSize: 24, fontWeight: 700, color: '#7c2d12', whiteSpace: 'nowrap' }}>{isTa ? 'தந்தை பெயர்' : "Father's Name"}:</span>
-          <span style={{ fontSize: 26, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.15 }}>{cert?.fatherName || ''}</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, height: '100%', visibility: cert?.motherName ? 'visible' : 'hidden' }}>
-          <span style={{ fontSize: 24, fontWeight: 700, color: '#7c2d12', whiteSpace: 'nowrap' }}>{isTa ? 'தாய் பெயர்' : "Mother's Name"}:</span>
-          <span style={{ fontSize: 26, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.15 }}>{cert?.motherName || ''}</span>
+      {/* Child Name (center-aligned, bold, dynamic sizing) */}
+      <div style={{ position: 'absolute', ...pos.name, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: `0 ${pct(24, W)}` }}>
+        <div
+          style={{
+            width: '100%',
+            color: '#7c2d12',
+            fontWeight: 800,
+            fontSize: `clamp(30px, ${(nameFs / W) * 100}vw, ${nameFs}px)`,
+            lineHeight: 1.06,
+            letterSpacing: 0.2,
+            wordBreak: 'break-word',
+            overflowWrap: 'anywhere',
+            textAlign: 'center',
+          }}
+        >
+          {cert?.childName || ''}
         </div>
       </div>
 
-      {/* Right info: City/Town, Issued On, Certificate ID */}
-      <div style={{ position: 'absolute', left: 878, top: 584, width: 468, height: 152, display: 'grid', gridTemplateRows: '1fr 1fr 1fr', alignItems: 'center', rowGap: 4 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, height: '100%', visibility: cert?.city ? 'visible' : 'hidden' }}>
-          <span style={{ fontSize: 24, fontWeight: 700, color: '#7c2d12', whiteSpace: 'nowrap' }}>{isTa ? 'நகரம் / ஊர்' : 'City / Town'}:</span>
-          <span style={{ fontSize: 26, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.15 }}>{cert?.city || ''}</span>
+      {/* Month & Year */}
+      <div style={{ position: 'absolute', ...pos.ribbon, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: `0 ${pct(12, W)}` }}>
+        <div style={{ color: '#9d174d', fontWeight: 800, fontSize: 'clamp(18px, 2.35vw, 36px)', lineHeight: 1.1 }}>{cert?.monthYear || ''}</div>
+      </div>
+
+      {/* Left details: Age, Father's Name, Mother's Name */}
+      <div style={{ position: 'absolute', ...pos.leftPanel, display: 'grid', gridTemplateRows: '1fr 1fr 1fr', alignItems: 'center', rowGap: '2%' }}>
+        <div style={rowStyle}>
+          <span style={labelStyle}>{isTa ? 'வயது' : 'Age'}:</span>
+          <span style={{ ...valueStyle, fontSize: 'clamp(16px, 1.82vw, 28px)' }}>{cert?.age || ''}</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, height: '100%' }}>
-          <span style={{ fontSize: 24, fontWeight: 700, color: '#7c2d12', whiteSpace: 'nowrap' }}>{isTa ? 'வழங்கிய தேதி' : 'Issued On'}:</span>
-          <span style={{ fontSize: 26, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.15 }}>{cert?.issueDate || ''}</span>
+        <div style={{ ...rowStyle, visibility: cert?.fatherName ? 'visible' : 'hidden' }}>
+          <span style={labelStyle}>{isTa ? 'தந்தை பெயர்' : "Father's Name"}:</span>
+          <span style={valueStyle}>{cert?.fatherName || ''}</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, height: '100%' }}>
-          <span style={{ fontSize: 24, fontWeight: 700, color: '#7c2d12', whiteSpace: 'nowrap' }}>{isTa ? 'சான்றிதழ் எண்' : 'Certificate ID'}:</span>
-          <span style={{ fontSize: 24, fontWeight: 700, color: '#111827', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.15 }}>{cert?.certId || ''}</span>
+        <div style={{ ...rowStyle, visibility: cert?.motherName ? 'visible' : 'hidden' }}>
+          <span style={labelStyle}>{isTa ? 'தாய் பெயர்' : "Mother's Name"}:</span>
+          <span style={valueStyle}>{cert?.motherName || ''}</span>
+        </div>
+      </div>
+
+      {/* Right details: City/Town, Issued On, Certificate ID */}
+      <div style={{ position: 'absolute', ...pos.rightPanel, display: 'grid', gridTemplateRows: '1fr 1fr 1fr', alignItems: 'center', rowGap: '2%' }}>
+        <div style={{ ...rowStyle, visibility: cert?.city ? 'visible' : 'hidden' }}>
+          <span style={labelStyle}>{isTa ? 'நகரம் / ஊர்' : 'City / Town'}:</span>
+          <span style={valueStyle}>{cert?.city || ''}</span>
+        </div>
+        <div style={rowStyle}>
+          <span style={labelStyle}>{isTa ? 'வழங்கிய தேதி' : 'Issued On'}:</span>
+          <span style={valueStyle}>{cert?.issueDate || ''}</span>
+        </div>
+        <div style={rowStyle}>
+          <span style={labelStyle}>{isTa ? 'சான்றிதழ் எண்' : 'Certificate ID'}:</span>
+          <span style={{ ...valueStyle, fontSize: 'clamp(14px, 1.56vw, 24px)', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' }}>{cert?.certId || ''}</span>
         </div>
       </div>
 
       {/* Bottom branding */}
-      <div style={{ position: 'absolute', left: 70, top: 912, width: 380, height: 66, display: 'flex', alignItems: 'center', gap: 12, color: '#fff7ed' }}>
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#f58529,#dd2a7b,#8134af,#515bd4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }}>
+      <div style={{ position: 'absolute', ...pos.brandL, display: 'flex', alignItems: 'center', gap: '3%', color: '#fff7ed' }}>
+        <div style={{ width: pct(36, 380), height: '54%', minWidth: 28, minHeight: 28, borderRadius: '28%', background: 'linear-gradient(135deg,#f58529,#dd2a7b,#8134af,#515bd4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }}>
           <Camera size={18} color="#fff" />
         </div>
-        <span style={{ fontSize: 26, fontWeight: 700, letterSpacing: 0.2, lineHeight: 1 }}>@poochandi.in</span>
+        <span style={{ fontSize: 'clamp(14px, 1.7vw, 26px)', fontWeight: 700, letterSpacing: 0.2, lineHeight: 1 }}>@poochandi.in</span>
       </div>
-      <div style={{ position: 'absolute', left: 1085, top: 912, width: 380, height: 66, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', color: '#ecfccb', paddingRight: 6 }}>
-        <span style={{ fontSize: 30, fontWeight: 800, lineHeight: 1, textShadow: '0 1px 2px rgba(0,0,0,0.25)' }}>Poochandi Varran</span>
+      <div style={{ position: 'absolute', ...pos.brandR, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', color: '#ecfccb', paddingRight: '1.5%' }}>
+        <span style={{ fontSize: 'clamp(16px, 1.95vw, 30px)', fontWeight: 800, lineHeight: 1, textShadow: '0 1px 2px rgba(0,0,0,0.25)' }}>Poochandi Varran</span>
       </div>
     </div>
   );
@@ -476,21 +477,25 @@ export default function GoodChildCertificate({ lang }: Props) {
             <div className="min-h-[360px] rounded-3xl border border-dashed border-purple-700/50 bg-[#12082b]/50 flex items-center justify-center text-center p-8 text-slate-400"><p className="font-semibold">{isTa ? 'விவரங்களை நிரப்பி சான்றிதழை உருவாக்கவும்.' : 'Fill the form and generate to see the certificate preview.'}</p></div>
           ) : (
             <div className="space-y-5">
-              {/* Preview: scaled view of the fixed certificate; full cert visible, no crop */}
-              <div ref={previewWrapRef} className="w-full overflow-hidden rounded-2xl bg-[#0d0522]/40 border border-purple-900/30 p-2 sm:p-3">
-                <div style={{ width: W * scale, height: H * scale, margin: '0 auto', position: 'relative' }}>
-                  <div style={{ position: 'absolute', top: 0, left: 0, width: W, height: H, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
-                    <CertificateVisual id="certificate-preview-visual" />
+              {/* Responsive preview: exact aspect-ratio container, scales seamlessly (no crop/distortion) */}
+              <div className="w-full rounded-2xl bg-[#0d0522]/40 border border-purple-900/30 p-2 sm:p-3 overflow-hidden">
+                <div className="w-full mx-auto" style={{ aspectRatio: AR, maxWidth: '100%', position: 'relative' }}>
+                  <div style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+                    {/* Render fixed-size cert scaled to fit container via CSS transform */}
+                    <div style={{ width: W, height: H, transformOrigin: 'top left', transform: 'scale(var(--cert-scale, 1))', position: 'absolute', top: 0, left: 0 }}>
+                      <CertificateVisual id="certificate-preview-visual" />
+                    </div>
+                    <PreviewScaler targetW={W} targetH={H} />
                   </div>
                 </div>
               </div>
 
-              {/* Hidden/offscreen export renderer: same content, fixed size, no transform (used by html2canvas) */}
+              {/* Offscreen export renderer: fixed size, no transform (used for PNG/PDF/share) */}
               <div aria-hidden="true" style={{ position: 'fixed', left: -10000, top: 0, width: W, height: H, opacity: 1, pointerEvents: 'none', zIndex: -1 }}>
-                <CertificateVisual id="certificate-export" />
+                <CertificateVisual id="certificate-node" nodeRef={exportRef} />
               </div>
 
-              <p className="text-xs text-slate-400 text-center">{isTa ? 'முழு சான்றிதழும் முன்னோட்டத்தில் தெரிகிறது. பதிவிறக்கம்/பகிர்வு அதே வடிவமைப்பைப் பயன்படுத்தும்.' : 'Full certificate is visible above. Download/share/save/export use the same completed certificate design.'}</p>
+              <p className="text-xs text-slate-400 text-center">{isTa ? 'முழு சான்றிதழும் முன்னோட்டத்தில் தெரிகிறது. பதிவிறக்கம்/பகிர்வு அதே வடிவமைப்பைப் பயன்படுத்தும்.' : 'Full certificate is visible above. Download/share/save use the same completed design.'}</p>
 
               <div id="ad-certificate-below-preview" data-ad-placement="below-preview-above-download" data-page="good-child-certificate"><AdSenseSlot slotId="certificate-below-preview" format="auto" className="my-4" /></div>
 
@@ -510,4 +515,24 @@ export default function GoodChildCertificate({ lang }: Props) {
       </div>
     </div>
   );
+}
+
+function PreviewScaler({ targetW, targetH }: { targetW: number; targetH: number }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const parent = ref.current?.parentElement as HTMLElement | null;
+    if (!parent) return;
+    const inner = parent.querySelector('div[style*="transform-origin"]') as HTMLElement | null;
+    const apply = () => {
+      const rect = parent.getBoundingClientRect();
+      const s = Math.min(rect.width / targetW, rect.height / targetH) || 1;
+      if (inner) inner.style.transform = `scale(${s})`;
+    };
+    apply();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(apply) : null;
+    ro?.observe(parent);
+    window.addEventListener('resize', apply);
+    return () => { ro?.disconnect(); window.removeEventListener('resize', apply); };
+  }, [targetW, targetH]);
+  return <div ref={ref} style={{ display: 'none' }} />;
 }

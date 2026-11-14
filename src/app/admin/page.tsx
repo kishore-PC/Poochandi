@@ -43,11 +43,20 @@ export default function AdminDashboardPage() {
   const [toCopyLoading, setToCopyLoading] = useState(false);
   const [toCopyEntries, setToCopyEntries] = useState<any[]>([]);
   const [randomCountInput, setRandomCountInput] = useState('');
-  const [selectedRandomNames, setSelectedRandomNames] = useState<string[]>([]);
+  const [selectedRandomEntries, setSelectedRandomEntries] = useState<Array<{ id: string; child_name: string }>>([]);
   const [copyStatus, setCopyStatus] = useState('');
   const [copyError, setCopyError] = useState('');
   const [isEditingNames, setIsEditingNames] = useState(false);
   const [editNamesText, setEditNamesText] = useState('');
+  const [hasCopiedSelection, setHasCopiedSelection] = useState(false);
+  const [confirmingRemoval, setConfirmingRemoval] = useState(false);
+  const [removingNames, setRemovingNames] = useState(false);
+  const [removalMessage, setRemovalMessage] = useState('');
+  const [toCopyCounts, setToCopyCounts] = useState({ total: 0, available: 0, used: 0 });
+  const [usedNames, setUsedNames] = useState<any[]>([]);
+  const [showUsedNames, setShowUsedNames] = useState(false);
+  const [loadingUsedNames, setLoadingUsedNames] = useState(false);
+  const [lastRemoval, setLastRemoval] = useState<{ removed: number; remaining: number } | null>(null);
 
   // Name entry control (global stop/resume)
   const [nameEntryStatus, setNameEntryStatus] = useState<'active' | 'stopped'>('active');
@@ -204,36 +213,69 @@ export default function AdminDashboardPage() {
   };
 
   // Complaint Names: To Copy / Random Select
-  const openToCopyModal = async () => {
-    setShowToCopyModal(true);
-    setSelectedRandomNames([]);
-    setIsEditingNames(false);
-    setEditNamesText('');
-    setCopyStatus('');
-    setCopyError('');
-    setRandomCountInput('');
+  const sanitizeCopyName = (name: string) => String(name ?? '').replace(/[^\p{L} ]/gu, '').slice(0, 13).trim();
+  const formatNamesForCopy = (names: string[]) => names.map((n) => sanitizeCopyName(n)).filter(Boolean).join('\n');
+  const parseEditedNames = (text: string) => text.split('\n').map((line) => sanitizeCopyName(line)).filter(Boolean);
+
+  const fetchAvailableCopyEntries = async () => {
     setToCopyLoading(true);
+    setCopyError('');
     try {
-      const res = await fetch('/api/admin/complaint-names?sort=newest');
+      const res = await fetch('/api/admin/complaint-names?availability=available&sort=newest&counts=1');
       if (res.status === 401) {
         router.push('/admin/login');
-        return;
+        return null;
       }
       const data = await res.json();
-      setToCopyEntries(Array.isArray(data.names) ? data.names : []);
+      const names = Array.isArray(data.names) ? data.names : [];
+      const counts = data.counts || { total: names.length, available: names.length, used: 0 };
+      setToCopyEntries(names);
+      setToCopyCounts({ total: Number(counts.total || 0), available: Number(counts.available || 0), used: Number(counts.used || 0) });
+      return { names, counts };
     } catch (e) {
       console.error(e);
-      setCopyError('Failed to load entries from the database.');
+      setCopyError('Failed to load available names from the server.');
       setToCopyEntries([]);
+      return null;
     } finally {
       setToCopyLoading(false);
     }
   };
 
-  const getValidCopyNames = () => toCopyEntries.map((n) => String(n.child_name ?? '').trim()).filter(Boolean);
+  const fetchUsedNames = async () => {
+    setLoadingUsedNames(true);
+    try {
+      const res = await fetch('/api/admin/complaint-names?availability=used&sort=newest');
+      if (res.status === 401) { router.push('/admin/login'); return; }
+      const data = await res.json();
+      setUsedNames(Array.isArray(data.names) ? data.names : []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingUsedNames(false);
+    }
+  };
 
-  const pickRandomNames = (count: number) => {
-    const pool = getValidCopyNames();
+  const openToCopyModal = async () => {
+    setShowToCopyModal(true);
+    setSelectedRandomEntries([]);
+    setIsEditingNames(false);
+    setEditNamesText('');
+    setCopyStatus('');
+    setCopyError('');
+    setRemovalMessage('');
+    setRandomCountInput('');
+    setHasCopiedSelection(false);
+    setConfirmingRemoval(false);
+    setLastRemoval(null);
+    setShowUsedNames(false);
+    await fetchAvailableCopyEntries();
+  };
+
+  const getAvailablePool = () => toCopyEntries.filter((n) => n && n.id && String(n.child_name ?? '').trim());
+
+  const pickRandomEntries = (count: number) => {
+    const pool = getAvailablePool().map((n) => ({ id: String(n.id), child_name: String(n.child_name ?? '').trim() }));
     for (let i = pool.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [pool[i], pool[j]] = [pool[j], pool[i]];
@@ -242,19 +284,19 @@ export default function AdminDashboardPage() {
   };
 
   const handleCopyRandomly = () => {
+    if (removingNames) return;
     setCopyError('');
     setCopyStatus('');
-    const total = getValidCopyNames().length;
+    setRemovalMessage('');
+    setHasCopiedSelection(false);
+    setConfirmingRemoval(false);
+    const total = getAvailablePool().length;
     if (total === 0) {
-      setCopyError('No entries available.');
+      setCopyError('No available names to select.');
       return;
     }
     const raw = randomCountInput.trim();
-    if (!raw) {
-      setCopyError('Please enter how many names to select.');
-      return;
-    }
-    if (!/^\d+$/.test(raw)) {
+    if (!raw || !/^\d+$/.test(raw)) {
       setCopyError('Requested count must be a positive whole number.');
       return;
     }
@@ -264,46 +306,49 @@ export default function AdminDashboardPage() {
       return;
     }
     if (count > total) {
-      setCopyError(`Requested count cannot exceed available entries (${total}).`);
+      setCopyError(`Requested count cannot exceed available names (${total}).`);
       return;
     }
-    const picked = pickRandomNames(count);
-    setSelectedRandomNames(picked);
+    const picked = pickRandomEntries(count);
+    setSelectedRandomEntries(picked);
     setIsEditingNames(false);
-    setEditNamesText(formatNamesForCopy(picked));
+    setEditNamesText(formatNamesForCopy(picked.map((p) => p.child_name)));
   };
 
-  const sanitizeCopyName = (name: string) => String(name ?? '').replace(/[^\p{L} ]/gu, '').slice(0, 13).trim();
-  const formatNamesForCopy = (names: string[]) => names.map((n) => sanitizeCopyName(n)).filter(Boolean).join('\n');
-  const parseEditedNames = (text: string) => text.split('\n').map((line) => sanitizeCopyName(line)).filter(Boolean);
-
   const handleCopyAllNames = async () => {
-    const text = formatNamesForCopy(selectedRandomNames);
+    if (removingNames) return;
+    const text = formatNamesForCopy(selectedRandomEntries.map((e) => e.child_name));
     if (!text) return;
     try {
       await navigator.clipboard.writeText(text);
       const count = text.split('\n').filter(Boolean).length;
-      setCopyStatus(`Successfully copied ${count} names!`);
+      setCopyStatus(`Successfully copied ${count} names. You can now confirm permanent removal from the available names database.`);
       setCopyError('');
+      setHasCopiedSelection(true);
     } catch (e) {
       console.error(e);
-      setCopyError('Could not copy to clipboard. Please select the text and copy manually.');
+      setCopyError('Could not copy to clipboard. Please select the text and copy manually, then confirm removal if needed.');
+      setHasCopiedSelection(true); // allow proceed after manual copy attempt per flow intent
     }
   };
 
   const handleSelectAgain = () => {
-    const total = getValidCopyNames().length;
+    if (removingNames) return;
+    setConfirmingRemoval(false);
+    setHasCopiedSelection(false);
+    setRemovalMessage('');
+    const total = getAvailablePool().length;
     const raw = randomCountInput.trim();
     const count = /^\d+$/.test(raw) ? Number(raw) : 0;
     if (count >= 1 && count <= total && total > 0) {
-      const picked = pickRandomNames(count);
-      setSelectedRandomNames(picked);
+      const picked = pickRandomEntries(count);
+      setSelectedRandomEntries(picked);
       setIsEditingNames(false);
-      setEditNamesText(formatNamesForCopy(picked));
+      setEditNamesText(formatNamesForCopy(picked.map((p) => p.child_name)));
       setCopyStatus('');
       setCopyError('');
     } else {
-      setSelectedRandomNames([]);
+      setSelectedRandomEntries([]);
       setIsEditingNames(false);
       setEditNamesText('');
       setCopyError('Enter a valid count, then click COPY RANDOMLY or Select Again.');
@@ -311,10 +356,10 @@ export default function AdminDashboardPage() {
   };
 
   const handleToggleEditNames = () => {
-    if (selectedRandomNames.length === 0) return;
+    if (selectedRandomEntries.length === 0 || removingNames) return;
     setIsEditingNames((v) => {
       const next = !v;
-      if (next) setEditNamesText(formatNamesForCopy(selectedRandomNames));
+      if (next) setEditNamesText(formatNamesForCopy(selectedRandomEntries.map((e) => e.child_name)));
       return next;
     });
     setCopyStatus('');
@@ -322,22 +367,68 @@ export default function AdminDashboardPage() {
   };
 
   const handleEditNamesChange = (value: string) => {
-    // Preserve line breaks while sanitizing each name (max 13 chars, letters/spaces only)
+    // Preserve line breaks while sanitizing display/copy text only (does not change selected record IDs)
     const sanitized = value
       .split('\n')
       .map((line) => String(line).replace(/[^\p{L} ]/gu, '').replace(/^\s+/, '').slice(0, 13))
       .join('\n');
     setEditNamesText(sanitized);
-    setSelectedRandomNames(parseEditedNames(sanitized));
   };
 
   const handleClearCopiedNames = () => {
-    if (!confirm('Clear all selected names from this copy session? This will not delete any database entries.')) return;
-    setSelectedRandomNames([]);
+    if (removingNames) return;
+    if (!confirm('Clear all selected names from this copy session? This will not remove any names from the database.')) return;
+    setSelectedRandomEntries([]);
     setIsEditingNames(false);
     setEditNamesText('');
     setCopyStatus('');
     setCopyError('');
+    setRemovalMessage('');
+    setHasCopiedSelection(false);
+    setConfirmingRemoval(false);
+  };
+
+  const handleConfirmRemoveSelected = async () => {
+    if (removingNames || selectedRandomEntries.length === 0) return;
+    setRemovingNames(true);
+    setCopyError('');
+    setRemovalMessage('');
+    try {
+      const ids = selectedRandomEntries.map((e) => e.id);
+      const res = await fetch('/api/admin/complaint-names', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'mark_used', markUsedIds: ids }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Failed to remove selected names from the server.');
+
+      const marked = Number(data.marked || 0);
+      const requested = Number(data.requested || ids.length);
+      const counts = data.counts || toCopyCounts;
+      setLastRemoval({ removed: marked, remaining: Number(counts.available || 0) });
+      setRemovalMessage(
+        `${marked} name${marked === 1 ? '' : 's'} successfully removed from the available names database.` +
+        (marked < requested ? ` (${requested - marked} already unavailable/used.)` : '')
+      );
+      setCopyStatus('');
+      setConfirmingRemoval(false);
+      setHasCopiedSelection(false);
+      setSelectedRandomEntries([]);
+      setIsEditingNames(false);
+      setEditNamesText('');
+      // Refresh from server so removed names never reappear
+      await fetchAvailableCopyEntries();
+      await fetchComplaintNames();
+      if (showUsedNames) await fetchUsedNames();
+    } catch (e: any) {
+      console.error(e);
+      setCopyError(e?.message || 'Server operation failed. No names were removed.');
+      // Refresh to reflect true server state
+      await fetchAvailableCopyEntries();
+    } finally {
+      setRemovingNames(false);
+    }
   };
 
   // File Upload Handlers (Avatar & Logo)
@@ -1165,107 +1256,137 @@ export default function AdminDashboardPage() {
 
           {/* TO COPY / Random Select Modal */}
           {showToCopyModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setShowToCopyModal(false)}>
-              <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl bg-[#12082b] border border-purple-700/50 shadow-2xl p-5 sm:p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => !removingNames && setShowToCopyModal(false)}>
+              <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-[#12082b] border border-purple-700/50 shadow-2xl p-5 sm:p-6" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <div>
                     <h3 className="text-xl font-black text-white">Randomly Select Names</h3>
-                    <p className="text-xs text-slate-400 mt-1">Select random child names from the actual Complaint Name List database.</p>
+                    <p className="text-xs text-slate-400 mt-1">Select random names from the server's available names database (one central source of truth).</p>
                   </div>
-                  <button type="button" onClick={() => setShowToCopyModal(false)} className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg text-slate-400 hover:text-white hover:bg-purple-900/40 cursor-pointer" aria-label="Close">
+                  <button type="button" onClick={() => !removingNames && setShowToCopyModal(false)} disabled={removingNames} className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg text-slate-400 hover:text-white hover:bg-purple-900/40 cursor-pointer disabled:opacity-50" aria-label="Close">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
                 {toCopyLoading ? (
-                  <p className="text-sm text-slate-400 py-6 text-center">Loading entries...</p>
+                  <p className="text-sm text-slate-400 py-6 text-center">Loading available names...</p>
                 ) : (
                   <>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4 text-xs">
+                      <div className="rounded-xl bg-[#0d0522] border border-purple-900/40 px-3 py-2"><span className="text-slate-500 block">Total Available</span><span className="text-teal-300 font-bold text-base">{toCopyCounts.available}</span></div>
+                      <div className="rounded-xl bg-[#0d0522] border border-purple-900/40 px-3 py-2"><span className="text-slate-500 block">Total Used</span><span className="text-amber-300 font-bold text-base">{toCopyCounts.used}</span></div>
+                      <div className="rounded-xl bg-[#0d0522] border border-purple-900/40 px-3 py-2"><span className="text-slate-500 block">Currently Selected</span><span className="text-white font-bold text-base">{selectedRandomEntries.length}</span></div>
+                      <div className="rounded-xl bg-[#0d0522] border border-purple-900/40 px-3 py-2"><span className="text-slate-500 block">Remaining After Remove</span><span className="text-purple-200 font-bold text-base">{Math.max(0, toCopyCounts.available - selectedRandomEntries.length)}</span></div>
+                    </div>
+
                     <div className="p-4 rounded-2xl bg-[#0d0522] border border-purple-900/40 space-y-3">
                       <div className="text-sm text-slate-200 flex flex-wrap items-center gap-2">
                         <span>Randomly Select</span>
                         <input
                           type="number"
                           min={1}
-                          max={Math.max(1, toCopyEntries.length)}
+                          max={Math.max(1, toCopyCounts.available)}
                           value={randomCountInput}
                           onChange={(e) => setRandomCountInput(e.target.value)}
-                          placeholder=""
-                          className="w-24 min-h-[44px] px-2 py-2 rounded-lg bg-[#140b2e] border border-purple-700 text-white text-center font-bold"
+                          disabled={removingNames}
+                          className="w-24 min-h-[44px] px-2 py-2 rounded-lg bg-[#140b2e] border border-purple-700 text-white text-center font-bold disabled:opacity-50"
                         />
-                        <span>of <strong className="text-teal-300">{toCopyEntries.map((n) => String(n.child_name ?? '').trim()).filter(Boolean).length}</strong> Entries</span>
+                        <span>of <strong className="text-teal-300">{toCopyCounts.available}</strong> available names</span>
                       </div>
-                      {toCopyEntries.map((n) => String(n.child_name ?? '').trim()).filter(Boolean).length === 0 && <p className="text-xs text-amber-300">No entries available.</p>}
+                      {toCopyCounts.available === 0 && <p className="text-xs text-amber-300">No available names. All names have been used or none exist.</p>}
                       {copyError && <p className="text-xs text-red-300">{copyError}</p>}
+                      {removalMessage && <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-semibold">{removalMessage}{lastRemoval && <div className="mt-1 text-emerald-200/90">Total names removed in this operation: {lastRemoval.removed}. Total names remaining (available): {lastRemoval.remaining}.</div>}</div>}
                       <button
                         type="button"
                         onClick={handleCopyRandomly}
-                        disabled={toCopyEntries.length === 0}
+                        disabled={toCopyCounts.available === 0 || removingNames}
                         className="w-full sm:w-auto min-h-[44px] px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 text-slate-950 font-black text-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         COPY RANDOMLY
                       </button>
                     </div>
 
-                    {selectedRandomNames.length > 0 && (
+                    {selectedRandomEntries.length > 0 && (
                       <div className="mt-5 p-4 rounded-2xl bg-[#0d0522] border border-teal-700/30 space-y-3">
                         <div className="flex items-center justify-between gap-2">
-                          <h4 className="text-sm font-black text-teal-300">Your Selected Names — Ready to Copy</h4>
-                          {isEditingNames && <span className="text-[10px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded">Editing</span>}
+                          <h4 className="text-sm font-black text-teal-300">Selected Names ({selectedRandomEntries.length}) - Copy then Confirm Removal</h4>
+                          {isEditingNames && <span className="text-[10px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded">Editing copy text</span>}
                         </div>
                         <textarea
                           readOnly={!isEditingNames}
-                          value={isEditingNames ? editNamesText : formatNamesForCopy(selectedRandomNames)}
+                          value={isEditingNames ? editNamesText : formatNamesForCopy(selectedRandomEntries.map((e) => e.child_name))}
                           onChange={(e) => handleEditNamesChange(e.target.value)}
                           className={`w-full min-h-[180px] px-3 py-3 rounded-xl border text-white text-sm leading-6 whitespace-pre-line resize-y ${isEditingNames ? 'bg-[#140b2e] border-amber-500/60 focus:outline-none focus:border-amber-400' : 'bg-[#140b2e] border-purple-800'}`}
                           aria-label="Selected names"
                         />
                         <p className="text-[11px] text-slate-500">
                           {isEditingNames
-                            ? 'Edit names (one per line). Max 13 characters each; letters and spaces only. No serial numbers or ages. Edits apply only to this copy session.'
-                            : 'Names only, one per line. No serial numbers, ages, dates, or IDs.'}
+                            ? 'Edit names for copying only (one per line). This does not change which database records will be removed.'
+                            : 'Names only, one per line. Removal is based on the selected database records (unique IDs), not text matching.'}
                         </p>
                         {copyStatus && (
                           <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-semibold">
                             {copyStatus}
                           </div>
                         )}
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          <button
-                            type="button"
-                            onClick={handleToggleEditNames}
-                            className={`inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-3 rounded-xl font-bold text-sm cursor-pointer border ${isEditingNames ? 'bg-amber-500 text-slate-950 border-amber-400' : 'bg-purple-900/60 hover:bg-purple-800/60 border-purple-700/50 text-purple-100'}`}
-                          >
-                            <Pencil className="w-4 h-4" />
-                            {isEditingNames ? 'DONE EDITING' : 'EDIT NAMES'}
+                          <button type="button" onClick={handleToggleEditNames} disabled={removingNames} className={`inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-3 rounded-xl font-bold text-sm cursor-pointer border disabled:opacity-50 ${isEditingNames ? 'bg-amber-500 text-slate-950 border-amber-400' : 'bg-purple-900/60 hover:bg-purple-800/60 border-purple-700/50 text-purple-100'}`}>
+                            <Pencil className="w-4 h-4" />{isEditingNames ? 'DONE EDITING' : 'EDIT NAMES'}
                           </button>
-                          <button
-                            type="button"
-                            onClick={handleCopyAllNames}
-                            className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-950 font-black text-sm cursor-pointer"
-                          >
-                            <Copy className="w-4 h-4" />
-                            COPY ALL NAMES
+                          <button type="button" onClick={handleCopyAllNames} disabled={removingNames} className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-950 font-black text-sm cursor-pointer disabled:opacity-50">
+                            <Copy className="w-4 h-4" />COPY ALL NAMES
                           </button>
-                          <button
-                            type="button"
-                            onClick={handleClearCopiedNames}
-                            className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-3 rounded-xl bg-red-950/60 hover:bg-red-900/60 border border-red-800/50 text-red-200 font-bold text-sm cursor-pointer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            CLEAR COPIED NAMES
+                          <button type="button" onClick={handleSelectAgain} disabled={removingNames} className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-3 rounded-xl bg-purple-900/60 hover:bg-purple-800/60 border border-purple-700/50 text-purple-100 font-bold text-sm cursor-pointer disabled:opacity-50">
+                            <RefreshCw className="w-4 h-4" />Select Again
                           </button>
-                          <button
-                            type="button"
-                            onClick={handleSelectAgain}
-                            className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-3 rounded-xl bg-purple-900/60 hover:bg-purple-800/60 border border-purple-700/50 text-purple-100 font-bold text-sm cursor-pointer"
-                          >
-                            <RefreshCw className="w-4 h-4" />
-                            Select Again
+                          <button type="button" onClick={handleClearCopiedNames} disabled={removingNames} className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-3 rounded-xl bg-red-950/60 hover:bg-red-900/60 border border-red-800/50 text-red-200 font-bold text-sm cursor-pointer disabled:opacity-50">
+                            <Trash2 className="w-4 h-4" />Clear Selection
                           </button>
+                        </div>
+
+                        {/* Permanent removal confirmation flow */}
+                        <div className="pt-2 border-t border-purple-900/40 space-y-3">
+                          <p className="text-xs text-amber-200/90">After copying, you must explicitly confirm to permanently remove these selected records from the available names database (they will become unavailable for future videos on all devices).</p>
+                          {!confirmingRemoval ? (
+                            <button type="button" onClick={() => setConfirmingRemoval(true)} disabled={!hasCopiedSelection || removingNames} className="w-full inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-3 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-black text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                              Confirm Removal (after copy)
+                            </button>
+                          ) : (
+                            <div className="p-3 rounded-xl bg-red-950/40 border border-red-700/40 space-y-3">
+                              <p className="text-sm text-red-100 font-semibold">Permanently remove {selectedRandomEntries.length} selected name{selectedRandomEntries.length === 1 ? '' : 's'} from the main available names database?</p>
+                              <p className="text-xs text-red-200/90">These names will no longer be available for future video selections on any device/session. This does not delete unrelated names. (Original records are preserved as used/history.)</p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <button type="button" onClick={() => setConfirmingRemoval(false)} disabled={removingNames} className="inline-flex items-center justify-center min-h-[44px] px-4 py-3 rounded-xl border border-slate-600 text-slate-200 font-bold cursor-pointer disabled:opacity-50">Cancel</button>
+                                <button type="button" onClick={handleConfirmRemoveSelected} disabled={removingNames} className="inline-flex items-center justify-center min-h-[44px] px-4 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black cursor-pointer disabled:opacity-50">{removingNames ? 'Removing...' : 'Confirm & Remove'}</button>
+                              </div>
+                            </div>
+                          )}
+                          {!hasCopiedSelection && <p className="text-[11px] text-slate-400">Copy the selected names first to enable confirmation.</p>}
                         </div>
                       </div>
                     )}
+
+                    <div className="mt-5 pt-4 border-t border-purple-900/40">
+                      <button type="button" onClick={async () => { const next = !showUsedNames; setShowUsedNames(next); if (next && usedNames.length === 0) await fetchUsedNames(); }} className="text-xs font-bold text-purple-200 hover:text-white underline underline-offset-2">
+                        {showUsedNames ? 'Hide Used Names' : 'View Used Names'}
+                      </button>
+                      {showUsedNames && (
+                        <div className="mt-3 p-3 rounded-2xl bg-[#0d0522] border border-purple-900/40">
+                          <div className="flex items-center justify-between mb-2"><span className="text-xs font-bold text-slate-300">Used Names ({toCopyCounts.used})</span><button type="button" onClick={fetchUsedNames} className="text-[11px] text-teal-300 hover:text-teal-200">Refresh</button></div>
+                          {loadingUsedNames ? <p className="text-xs text-slate-500">Loading...</p> : usedNames.length === 0 ? <p className="text-xs text-slate-500">No used names yet.</p> : (
+                            <div className="max-h-48 overflow-y-auto space-y-1 text-xs text-slate-300">
+                              {usedNames.map((n) => (
+                                <div key={n.id} className="flex items-center justify-between gap-2 py-1 border-b border-purple-900/20 last:border-b-0">
+                                  <span className="truncate"><span className="font-mono text-teal-400/80 mr-2">{n.id}</span>{n.child_name} <span className="text-slate-500">({n.child_age})</span></span>
+                                  <span className="text-[10px] text-amber-300/80 shrink-0">USED</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </>
                 )}
               </div>

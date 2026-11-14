@@ -202,6 +202,7 @@ export async function initDb(): Promise<void> {
       { sql: `CREATE TABLE IF NOT EXISTS admin_users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, created_at TEXT DEFAULT (datetime('now')))` },
     ]);
     try { await execute('ALTER TABLE articles ADD COLUMN seo_keywords TEXT'); } catch {}
+    try { await execute('ALTER TABLE complaint_names ADD COLUMN used_at TEXT'); } catch {}
     await seedIfNeeded();
   })().catch((err) => {
     initPromise = null; // allow retry after config fixes
