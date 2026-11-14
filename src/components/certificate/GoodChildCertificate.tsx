@@ -307,7 +307,7 @@ export default function GoodChildCertificate({ lang }: Props) {
               top: '26.5%',
               left: '67.5%',
               width: '12.5%',
-              height: '18.75%', /* 12.5% of 1920 = 240px; 240/1280 = 18.75% to keep circle */
+              height: '18.75%', /* keeps circle in 1920x1280 */
               borderRadius: '50%',
               objectFit: 'cover',
               objectPosition: 'center',
